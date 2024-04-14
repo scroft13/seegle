@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD-OtJs2IMAD0xcuweY22ErM7_2_JqXjTE',
-    appId: '1:570472137763:android:aceed3024c4a94feb89d96',
+    appId: '1:570472137763:android:4d40abc96e95c4e7b89d96',
     messagingSenderId: '570472137763',
     projectId: 'seegle-e1eb3',
     storageBucket: 'seegle-e1eb3.appspot.com',
@@ -66,10 +66,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBtyveQV5seE1kTEv8Xg_ujwcvsm8qtrrc',
-    appId: '1:570472137763:ios:f27e274634d7d23fb89d96',
+    appId: '1:570472137763:ios:024f976f8f40ef0bb89d96',
     messagingSenderId: '570472137763',
     projectId: 'seegle-e1eb3',
     storageBucket: 'seegle-e1eb3.appspot.com',
+    androidClientId: '570472137763-fbdfkpmm8f5aunp6bdlivq7rmdbqrvti.apps.googleusercontent.com',
+    iosClientId: '570472137763-207drij2vqa61qjkj55urhd55vu169k5.apps.googleusercontent.com',
     iosBundleId: 'com.sdotlabs.seegle',
   );
+
 }

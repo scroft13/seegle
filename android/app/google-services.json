@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:570472137763:android:aceed3024c4a94feb89d96",
         "android_client_info": {
-          "package_name": "com.sdotlabs.seegle"
+          "package_name": "com.example.seegle"
         }
       },
       "oauth_client": [
@@ -49,6 +49,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "570472137763-fbdfkpmm8f5aunp6bdlivq7rmdbqrvti.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sdotlabs.seegle",
+            "certificate_hash": "6dd9d88919c5a6c2ad46bd71074a6787e05a7b8e"
+          }
+        },
         {
           "client_id": "570472137763-uqcb3rvl40urhbbq2kafaem4ln38lqdf.apps.googleusercontent.com",
           "client_type": 3

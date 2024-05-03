@@ -1,56 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:seegle/screens/auth_screen.dart';
-import 'package:seegle/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:seegle/user_provider.dart';
+import 'package:seegle/widgets/profile_pic.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final bool showExitButton; // Whether to show the exit button
-  final AuthService _authService = AuthService();
+  final bool showProfileButton; // Whether to show the exit button
 
-  CustomAppBar({
+  const CustomAppBar({
+    super.key,
     required this.title,
-    this.showExitButton = false, // Default to not showing the exit button
+    this.showProfileButton = false, // Default to not showing the exit button
   });
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     return AppBar(
       title: Text(title),
+      leading: Container(),
       automaticallyImplyLeading:
           false, // Assume we manage the leading widget ourselves
       actions: <Widget>[
-        if (showExitButton)
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Exit App'),
-                  content: Text(
-                      'Are you sure you want to exit? You will be signed out completely.'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text('No'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => AuthScreen(),
-                          ),
-                        ); // Close the dialog
-                        _authService.signOut();
-
-                        // Attempt to pop the current screen or exit the app
-                      },
-                      child: Text('Yes'),
-                    ),
-                  ],
-                ),
-              );
-            },
+        if (showProfileButton)
+          ProfilePictureWidget(
+            photoUrl: userProvider.user?.photoUrl ??
+                '', // Replace with your actual URL
           ),
       ],
     );

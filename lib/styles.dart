@@ -3,6 +3,7 @@ import 'package:seegle/size_configs.dart';
 
 Color seegleYellow = const Color(0xffFFCC00);
 Color seegleGray = const Color(0xff333333);
+Color seegleLightGray = const Color(0xff999999);
 
 abstract class Styles {
   static const TextStyle subTitle = TextStyle(

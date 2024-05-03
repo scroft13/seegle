@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:seegle/screens/home_screen.dart';
+import 'package:seegle/home_wrapper.dart';
 import 'package:seegle/models/user_model.dart';
 import 'package:seegle/user_provider.dart';
 import '../services/auth_service.dart';
@@ -26,7 +26,6 @@ class _UsernameRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register Username")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -80,7 +79,7 @@ class _UsernameRegistrationScreenState
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+      MaterialPageRoute(builder: (context) => HomeWrapper()),
     ); // Assuming you navigate to the home screen after this
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:seegle/screens/profile.dart';
 import 'user_provider.dart';
 import 'screens/auth_screen.dart';
 
@@ -21,10 +22,10 @@ class MyApp extends StatelessWidget {
           create: (context) => UserProvider(),
         )
       ],
-      child: MaterialApp(
-        title: 'Seegle',
-        home: AuthScreen(),
-      ),
+      child: MaterialApp(title: 'Seegle', initialRoute: '/', routes: {
+        '/': (context) => AuthScreen(),
+        '/profile': (context) => ProfilePage(),
+      }),
     );
   }
 }

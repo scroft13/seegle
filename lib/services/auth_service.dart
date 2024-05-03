@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-import 'package:seegle/screens/home_screen.dart';
+import 'package:seegle/home_wrapper.dart';
 import 'package:seegle/models/user_model.dart';
 import 'package:seegle/screens/username_registration_screen.dart';
 import 'package:seegle/user_provider.dart';
@@ -57,28 +57,22 @@ class AuthService {
 
       if (!userDoc.exists || userDoc.data()!['username'] == null) {
         // User is new or doesn't have a username
-        UserModel userModel = UserModel(uid: user.uid, email: user.email!);
-
-        // Provider.of<UserProvider>(context, listen: false).setUser(userModel);
-        // print(userModel);
+        UserModel userModel = UserModel(
+            uid: user.uid, email: user.email!, photoUrl: user.photoURL);
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => UsernameRegistrationScreen(user: userModel),
           ),
         );
-      }
-
-      // Redirect to Username Registration Screen
-      // This redirection could be handled by a callback or a Navigator push depending on your app's architecture
-      else {
+      } else {
+        // Existing user with username
+        // Proceed to home or main screen
         Provider.of<UserProvider>(context, listen: false).setUser(user.uid);
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => HomeScreen(),
+            builder: (context) => const HomeWrapper(),
           ),
         );
-        // Existing user with username
-        // Proceed to home or main screen
       }
     }
   }
@@ -89,6 +83,7 @@ class AuthService {
   }
 
   Future<void> setUsername(String username, UserModel user) async {
+    print(user);
     await _firestore.collection('usernames').doc(username).set({
       'userId': user.uid,
     });
@@ -101,8 +96,10 @@ class AuthService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(context) async {
     await _firebaseAuth.signOut();
+
+    Provider.of<UserProvider>(context, listen: false).clearUser();
     await GoogleSignIn().signOut(); // Ensure Google sign-out
     // Apple sign-out handled implicitly with Firebase sign-out
   }

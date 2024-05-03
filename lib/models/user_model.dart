@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 class UserModel {
   String uid;
   String email;
+  bool isBanned;
   String? username;
   String? photoUrl;
   int? internetPoints;
@@ -8,6 +11,7 @@ class UserModel {
   UserModel(
       {required this.uid,
       required this.email,
+      required this.isBanned,
       this.username,
       this.internetPoints,
       this.photoUrl});
@@ -18,7 +22,8 @@ class UserModel {
       'email': email,
       'username': username,
       'photoUrl': photoUrl,
-      'internetPoints': internetPoints ?? 0
+      'internetPoints': internetPoints ?? 0,
+      'isBanned': isBanned
     };
   }
 
@@ -27,6 +32,7 @@ class UserModel {
     return UserModel(
         uid: json['uid'],
         email: json['email'],
+        isBanned: json['isBanned'],
         username: json['username'] ?? '', // Handle null if necessary
         photoUrl: json['photoUrl'] ?? '',
         internetPoints: json['internetPoints'] ?? 0);

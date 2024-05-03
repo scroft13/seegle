@@ -8,14 +8,14 @@ class UserProvider with ChangeNotifier {
   UserModel? get user => _user;
   bool get isLoggedIn => _user != null;
 
-  void setUser(String userId) {
+  void setUser(String userId) async {
     UserModel userData;
     FirestoreService().listenToDocument('users', userId, (data) {
-      print(data);
       userData = UserModel.fromJson(data);
       _user = userData;
+      notifyListeners();
+      print('notified');
     });
-    notifyListeners();
   }
 
   void clearUser() {

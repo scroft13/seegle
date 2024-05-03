@@ -14,7 +14,6 @@ class UserProvider with ChangeNotifier {
       userData = UserModel.fromJson(data);
       _user = userData;
       notifyListeners();
-      print('notified');
     });
   }
 

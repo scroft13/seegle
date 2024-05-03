@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:seegle/screens/home_screen.dart';
-import 'package:seegle/screens/profile.dart';
+import 'package:seegle/screens/profile_screen.dart';
 import '/seegle_icons.dart';
 
 final squawkRef = FirebaseFirestore.instance.collection('groupNotification');

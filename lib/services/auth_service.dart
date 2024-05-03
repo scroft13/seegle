@@ -27,7 +27,6 @@ class AuthService {
         await _postSignInProcess(_firebaseAuth.currentUser, context);
       }
     } catch (e) {
-      print('Google Sign-In Error: $e');
       throw Exception('Google Sign-In Failed');
     }
   }
@@ -46,7 +45,6 @@ class AuthService {
       await _firebaseAuth.signInWithCredential(credential);
       await _postSignInProcess(_firebaseAuth.currentUser, context);
     } catch (e) {
-      print('Apple Sign-In Error: $e');
       throw Exception('Apple Sign-In Failed');
     }
   }
@@ -58,7 +56,10 @@ class AuthService {
       if (!userDoc.exists || userDoc.data()!['username'] == null) {
         // User is new or doesn't have a username
         UserModel userModel = UserModel(
-            uid: user.uid, email: user.email!, photoUrl: user.photoURL);
+            uid: user.uid,
+            email: user.email!,
+            photoUrl: user.photoURL,
+            isBanned: false);
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => UsernameRegistrationScreen(user: userModel),
@@ -83,7 +84,6 @@ class AuthService {
   }
 
   Future<void> setUsername(String username, UserModel user) async {
-    print(user);
     await _firestore.collection('usernames').doc(username).set({
       'userId': user.uid,
     });
@@ -92,7 +92,8 @@ class AuthService {
       'email': user.email,
       'internetPoints': user.internetPoints ?? 0,
       'photoUrl': user.photoUrl,
-      'uid': user.uid
+      'uid': user.uid,
+      'isBanned:': false
     }, SetOptions(merge: true));
   }
 

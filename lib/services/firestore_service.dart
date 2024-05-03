@@ -10,11 +10,12 @@ class FirestoreService {
       if (snapshot.exists && snapshot.data() != null) {
         onDataChanged(snapshot.data() as Map<String, dynamic>);
       } else {
-        print("Document does not exist");
         onDataChanged({});
+
+        throw Exception('Document does not exist');
       }
     }, onError: (error) {
-      print("Error listening to document: $error");
+      throw Exception("Error listening to document: $error");
     });
   }
 }

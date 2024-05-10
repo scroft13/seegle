@@ -1,20 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:seegle/styles.dart';
 import '../services/auth_service.dart';
 
+// ignore: must_be_immutable
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({
-    super.key,
-  });
+  bool shouldShowScaffold;
+  AuthScreen({super.key, required this.shouldShowScaffold});
 
   @override
-  _AuthScreenState createState() => _AuthScreenState();
+  AuthScreenState createState() => AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class AuthScreenState extends State<AuthScreen> {
   bool showAppleLogin = true;
   final AuthService _authService = AuthService();
+  bool isLoggedIn = false;
   @override
   void initState() {
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -22,15 +24,24 @@ class _AuthScreenState extends State<AuthScreen> {
         showAppleLogin = false;
       });
     }
+    isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    if (isLoggedIn) {
+      widget.shouldShowScaffold = true;
+      handleLogin(context);
+    }
     super.initState();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    double cWidth = MediaQuery.of(context).size.width * 0.8;
+  handleLogin(context) async {
+    // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
+    await _authService.postSignInProcess(
+        FirebaseAuth.instance.currentUser, context);
+  }
+
+  Scaffold unauthScreen(context) {
     const String versionNumber = "1.3.0";
-
+    double cWidth = MediaQuery.of(context).size.width * 0.8;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFFFFFFFF)),
@@ -168,30 +179,10 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    // print('IsLogged in ' + isLoggedIn.toString());
+    return unauthScreen(context);
+  }
 }
-
-
-
-    // return Scaffold(
-    //   body: Center(
-    //     child: Column(
-    //       mainAxisAlignment: MainAxisAlignment.center,
-    //       children: <Widget>[
-    //         SignInButton(
-    //           Buttons.Google,
-    //           onPressed: () async {
-    //             await _authService.signInWithGoogle(context);
-    //           },
-    //           text: "Sign in with Google",
-    //         ),
-    //         SignInButton(
-    //           Buttons.Apple,
-    //           onPressed: () async {
-    //             await _authService.signInWithApple(context);
-    //           },
-    //           text: "Sign in with Apple",
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:seegle/user_provider.dart';
+import 'package:seegle/widgets/squawk_listener.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,7 +13,25 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: Center(
-        child: Text('Welcome $username!'),
+        // heightFactor: 20,
+        child: Flex(
+          direction: Axis.vertical,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Welcome $username!'),
+
+                  const Expanded(
+                      child: SizedBox(height: 500, child: SquawkListWidget())),
+                  // Use the custom button widget
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

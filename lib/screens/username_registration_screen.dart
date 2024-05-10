@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:seegle/home_wrapper.dart';
 import 'package:seegle/models/user_model.dart';
 import 'package:seegle/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 
 class UsernameRegistrationScreen extends StatefulWidget {
@@ -13,73 +17,297 @@ class UsernameRegistrationScreen extends StatefulWidget {
   final UserModel user;
 
   @override
-  _UsernameRegistrationScreenState createState() =>
-      _UsernameRegistrationScreenState();
+  UsernameRegistrationScreenState createState() =>
+      UsernameRegistrationScreenState();
 }
 
-class _UsernameRegistrationScreenState
+class UsernameRegistrationScreenState
     extends State<UsernameRegistrationScreen> {
   final _usernameController = TextEditingController();
-  String _errorMessage = '';
   bool _isProcessing = false;
+  // String _errorMessage = '';
+  bool _agree = false;
+  String? username;
+  final usernameRef = FirebaseFirestore.instance.collection('usernames');
+
+  final AuthService _authService = AuthService();
+  Future<void> _launchURLPrivacy() async {
+    Uri link = Uri.parse("https://seegle.app/privacy");
+    if (await canLaunchUrl(link)) {
+      await launchUrl(link);
+    } else {
+      throw 'Could not launch $link';
+    }
+  }
+
+  Future<void> _launchURLTerms() async {
+    const link = "https://seegle.app/terms";
+    Uri url = Uri.parse(link);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $link';
+    }
+  }
+
+  _submit(context) async {
+    final AuthService authService = AuthService();
+
+    username = _usernameController.text;
+    var usernameCheckLowercase = username?.toLowerCase();
+    DocumentSnapshot usernameCheck =
+        await usernameRef.doc(usernameCheckLowercase).get();
+    if (_agree == false) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text(
+                'You must agree to our terms if you want to continue.'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Allrightey Then.')),
+            ],
+          );
+        },
+      );
+    } else if (username!.length < 3 ||
+        username!.length > 24 ||
+        username!.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text(
+                'Your username is either too short or too long. We need it juuust right.'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Allrightey Then.')),
+            ],
+          );
+        },
+      );
+    } else if (usernameCheck.exists) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Sorry, that username already exists.'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Allrightey Then.')),
+            ],
+          );
+        },
+      );
+    } else {
+      await authService.setUsername(_usernameController.text, widget.user);
+      Provider.of<UserProvider>(context, listen: false).clearUser();
+      Provider.of<UserProvider>(context, listen: false)
+          .setUser(widget.user.uid);
+
+      Fluttertoast.showToast(
+        msg: 'Welcome $username! We are excited to have you!',
+        toastLength: Toast.LENGTH_LONG,
+        backgroundColor: const Color(0xFFFFCC00),
+        textColor: const Color(0xFF333333),
+        timeInSecForIosWeb: 2,
+      );
+      Timer(const Duration(milliseconds: 100), () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeWrapper()),
+        ); // Assuming you navigate to the home screen after this
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          // crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+            Padding(
+              padding: const EdgeInsets.only(top: 55.0),
+              child: Stack(
+                children: <Widget>[
+                  Text(
+                    'Welcome To Seegle!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 45,
+                      fontFamily: "Nexa",
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 1.6
+                        ..color = const Color.fromARGB(255, 66, 66, 66),
+                      letterSpacing: 4.5,
+                    ),
+                  ),
+                  const Text(
+                    'Welcome To Seegle!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 45,
+                      fontFamily: "Nexa",
+                      color: Color.fromARGB(255, 255, 204, 0),
+                      letterSpacing: 4.5,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isProcessing
-                  ? null
-                  : () async {
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.0),
+              child: Text(
+                'We just need some basic info before we can get started',
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Form(
+              autovalidateMode: AutovalidateMode.always,
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'What should we call you?',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    child: TextField(
+                      controller: _usernameController,
+                      onEditingComplete: () {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Switch(
+                    onChanged: (bool value) {
                       setState(() {
-                        _isProcessing = true;
-                      });
-                      await _registerUsername();
-                      setState(() {
-                        _isProcessing = false;
+                        _agree = value;
                       });
                     },
-              child: Text(_isProcessing ? 'Processing...' : 'Register'),
+                    value: _agree,
+                  ),
+                  const SizedBox(width: 20),
+                  const Expanded(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          child: Text(
+                            'Are you at least 13 years old and do you agree to what our team (not legally a team) of legal advisers has told us you have to agree to in order to use the app? TLDR; Don\'t be a dick, don\'t show your dick.',
+                            style: TextStyle(
+                              fontSize: 14,
+                            ),
+                            // Ensures text wraps and clips overflow
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 40),
+            SizedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextButton(
+                    onPressed: _launchURLPrivacy,
+                    child: const Text('Privacy Policy'),
+                  ),
+                  TextButton(
+                      onPressed: _launchURLTerms,
+                      child: const Text('Terms of Agreement'))
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: _isProcessing
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isProcessing = true;
+                          });
+                          await _submit(context);
+                          setState(() {
+                            _isProcessing = false;
+                          });
+                        },
+                  child: Container(
+                    width: 300,
+                    height: 75,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: const Color(0xFF333333),
+                        boxShadow: const [
+                          BoxShadow(
+                              color: Color(0xFF999999),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                              blurStyle: BlurStyle.outer,
+                              offset: Offset(2, 5))
+                        ]),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Text(
+                        _isProcessing ? 'Processing...' : 'Let\'s Go!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: const Color(0xFFFFCC00),
+                          fontSize: _isProcessing ? 24 : 48,
+                          fontFamily: 'Nexa Bold',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                _authService.signOut(context);
+              },
+              child: const Text('Cancel'),
+            )
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _registerUsername() async {
-    final username = _usernameController.text;
-    if (username.isEmpty) {
-      setState(() => _errorMessage = "Username cannot be empty");
-      return;
-    }
-
-    final authService = AuthService();
-    bool isAvailable = await authService.isUsernameAvailable(username);
-    if (!isAvailable) {
-      setState(() => _errorMessage = "Username is already taken");
-      return;
-    }
-
-    await authService.setUsername(username, widget.user);
-    // Provider.of(context)
-    Provider.of<UserProvider>(context, listen: false).setUser(widget.user.uid);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomeWrapper()),
-    ); // Assuming you navigate to the home screen after this
   }
 }

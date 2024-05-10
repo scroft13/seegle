@@ -24,7 +24,7 @@ class AuthService {
           idToken: googleAuth.idToken,
         );
         await _firebaseAuth.signInWithCredential(credential);
-        await _postSignInProcess(_firebaseAuth.currentUser, context);
+        await postSignInProcess(_firebaseAuth.currentUser, context);
       }
     } catch (e) {
       throw Exception('Google Sign-In Failed');
@@ -43,13 +43,14 @@ class AuthService {
         accessToken: appleCredential.authorizationCode,
       );
       await _firebaseAuth.signInWithCredential(credential);
-      await _postSignInProcess(_firebaseAuth.currentUser, context);
+      await postSignInProcess(_firebaseAuth.currentUser, context);
     } catch (e) {
       throw Exception('Apple Sign-In Failed');
     }
   }
 
-  Future<void> _postSignInProcess(User? user, context) async {
+  Future<void> postSignInProcess(User? user, context) async {
+    print(user);
     if (user != null) {
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
 
@@ -68,6 +69,8 @@ class AuthService {
       } else {
         // Existing user with username
         // Proceed to home or main screen
+        Provider.of<UserProvider>(context, listen: false).clearUser();
+
         Provider.of<UserProvider>(context, listen: false).setUser(user.uid);
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -93,7 +96,7 @@ class AuthService {
       'internetPoints': user.internetPoints ?? 0,
       'photoUrl': user.photoUrl,
       'uid': user.uid,
-      'isBanned:': false
+      'isBanned': false
     }, SetOptions(merge: true));
   }
 
@@ -101,7 +104,9 @@ class AuthService {
     await _firebaseAuth.signOut();
 
     Provider.of<UserProvider>(context, listen: false).clearUser();
-    await GoogleSignIn().signOut(); // Ensure Google sign-out
+    await GoogleSignIn().signOut();
+    Navigator.of(context).popAndPushNamed('/');
+    // Ensure Google sign-out
     // Apple sign-out handled implicitly with Firebase sign-out
   }
 }

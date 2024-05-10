@@ -448,6 +448,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.7"
+  inner_shadow_widget:
+    dependency: "direct main"
+    description:
+      name: inner_shadow_widget
+      sha256: "0d4f86235b2d19aa4d892089419481b0ecb82a3f25c4e66d63b69e97d92ce75d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   iris_method_channel:
     dependency: transitive
     description:

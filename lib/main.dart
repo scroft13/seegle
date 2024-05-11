@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       0xFF000000); // Typically a color that is visible on the secondary color
   final Color errorColor =
       const Color(0xFFB00020); // Standard material design error color
-  final Color onErrorColor = const Color(0xFFFFFFFF); // Typica  // Light gray
+  final Color onErrorColor = const Color(0xFFFFFFFF); // Light gray
 
   @override
   Widget build(BuildContext context) {

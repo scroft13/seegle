@@ -50,7 +50,6 @@ class AuthService {
   }
 
   Future<void> postSignInProcess(User? user, context) async {
-    print(user);
     if (user != null) {
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
 

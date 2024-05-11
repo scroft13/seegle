@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:seegle/styles.dart';
+import 'package:seegle/widgets/create_squawk_dialog.dart';
 import 'package:seegle/widgets/new_squawk_option.dart';
 
 class MyCustomDialog extends StatefulWidget {
@@ -54,15 +55,27 @@ class _MyCustomDialogState extends State<MyCustomDialog> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(10.0),
             ),
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                NewDialogOption(
-                  icon: Icons.message_outlined,
-                  title: 'New Squawk',
-                  subTitle: 'Send out a new squawk for help',
+                GestureDetector(
+                  child: const NewDialogOption(
+                    icon: Icons.message_outlined,
+                    title: 'New Squawk',
+                    subTitle: 'Send out a new squawk for help',
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (BuildContext context) {
+                        return const NewSquawkDialog();
+                      },
+                    );
+                  },
                 ),
-                NewDialogOption(
+                const NewDialogOption(
                   icon: Icons.people_outline_sharp,
                   title: 'New Community',
                   subTitle: 'Create a new community to post squawks',

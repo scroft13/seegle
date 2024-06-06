@@ -8,8 +8,6 @@ class SquawkListWidget extends StatelessWidget {
   const SquawkListWidget({super.key});
 
   String formatLocalDateTime(Timestamp timestamp) {
-    // print(dateTime);
-    // return '';
     var dateTime =
         DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch);
     var formatter = DateFormat.yMd().add_jm(); // Date and time format

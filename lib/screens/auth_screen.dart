@@ -182,7 +182,6 @@ class AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // print('IsLogged in ' + isLoggedIn.toString());
     return unauthScreen(context);
   }
 }

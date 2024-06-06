@@ -41,7 +41,7 @@ dependencies:
   flutter_signin_button: ^2.0.0
   crypto: ^3.0.3
   cloud_firestore: ^4.16.1
-  agora_rtc_engine: ^6.3.0
+  # agora_rtc_engine: ^6.3.0
   permission_handler: ^11.3.1
   flutter_native_splash: ^2.4.0
   firebase_analytics: ^10.10.2
@@ -57,7 +57,11 @@ dependencies:
   provider: ^6.0.2
   inner_shadow_widget: ^0.0.3
   intl: ^0.19.0
-  google_fonts: ^2.0.0
+  google_fonts: ^6.2.1
+  camera: ^0.11.0
+  path_provider: ^2.0.11
+  video_player: ^2.2.11
+  firebase_storage: ^11.0.9
 
 dev_dependencies:
   flutter_test:
@@ -68,7 +72,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
   flutter_launcher_icons: "^0.13.1"
 
 flutter_launcher_icons:

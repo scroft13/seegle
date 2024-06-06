@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 import 'package:seegle/styles.dart';
-import 'package:seegle/user_provider.dart';
 import 'package:seegle/widgets/new_squawk_option.dart';
+import 'package:seegle/widgets/video_recorder.dart';
 
 class NewSquawkDialog extends StatefulWidget {
   const NewSquawkDialog({super.key});
@@ -25,22 +23,15 @@ class _NewSquawkDialogState extends State<NewSquawkDialog> {
 
   // Function to add a new squawk to Firestore
   Future<void> _createNewSquawk(context) async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    var title = _titleController.text;
-    var username = userProvider.user?.username ?? "No username available";
-    var photoUrl = userProvider.user?.photoUrl;
-    CollectionReference squawks =
-        FirebaseFirestore.instance.collection('squawks');
     try {
-      // Add a new document with a generated ID
-      await squawks.add({
-        'title': title,
-        'username': username,
-        'photoUrl': photoUrl, // Example content
-        'timestamp': FieldValue.serverTimestamp(), // Add server timestamp
-      });
-      print("Squawk added successfully!");
       Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VideoRecorderWidget(
+            title: _titleController.text,
+          ),
+        ),
+      );
     } catch (e) {
       print("Error adding squawk: $e");
       Navigator.of(context).pop();

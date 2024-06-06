@@ -15,5 +15,6 @@
     "signup",
     "TLDR",
     "Unauth"
-  ]
+  ],
+  "cmake.sourceDirectory": "/Users/hal/seegle/linux"
 }

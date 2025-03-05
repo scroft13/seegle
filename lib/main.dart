@@ -47,9 +47,7 @@ class MyApp extends StatelessWidget {
               secondary: secondaryColor,
               onSecondary: onSecondaryColor,
               error: errorColor,
-              onError: onErrorColor,
-              background: Colors.white,
-              onBackground: darkFontColor, // Text color for background areas
+              onError: onErrorColor, // Text color for background areas
               surface: darkFontColor,
               onSurface: darkFontColor, // Inp)
             ),
@@ -63,28 +61,26 @@ class MyApp extends StatelessWidget {
               secondary: secondaryColor,
               onSecondary: onSecondaryColor,
               error: errorColor,
-              onError: onErrorColor,
-              background: backgroundColor,
-              onBackground: darkFontColor, // Text color for background areas
+              onError: onErrorColor, // Text color for background areas
               surface: darkFontColor,
               onSurface: darkFontColor, // Inp)
             ),
             switchTheme: SwitchThemeData(
-              trackColor: MaterialStateProperty.resolveWith<Color?>(
-                (Set<MaterialState> states) {
-                  if (states.contains(MaterialState.selected)) {
-                    return MaterialStateColor.resolveWith((states) =>
+              trackColor: WidgetStateProperty.resolveWith<Color?>(
+                (Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return WidgetStateColor.resolveWith((states) =>
                         customYellow); // Color when button is pressed
                   }
-                  return MaterialStateColor.resolveWith(
+                  return WidgetStateColor.resolveWith(
                       (states) => darkGray); // Default color
                 },
               ),
               // overlayColor:
               //     MaterialStateColor.resolveWith((states) => lightGray),
-              thumbColor: MaterialStateColor.resolveWith((states) => lightGray),
+              thumbColor: WidgetStateColor.resolveWith((states) => lightGray),
               trackOutlineColor:
-                  MaterialStateColor.resolveWith((states) => lightGray),
+                  WidgetStateColor.resolveWith((states) => lightGray),
             ),
           ),
           debugShowCheckedModeBanner: false,

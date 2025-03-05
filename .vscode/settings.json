@@ -16,5 +16,6 @@
     "TLDR",
     "Unauth"
   ],
-  "cmake.sourceDirectory": "/Users/hal/seegle/linux"
+  "cmake.sourceDirectory": "/Users/hal/seegle/linux",
+  "java.compile.nullAnalysis.mode": "automatic"
 }

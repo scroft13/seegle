@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>seegle</string>
+		<string>Seegle</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -23,7 +23,16 @@
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
-		<true/>
+		<true />
+		<key>NSCameraUsageDescription</key>
+		<string>We need to access your camera to record videos.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>We need to access your microphone to record audio for videos.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>We need access to your photo library to save the recorded videos.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We need access to your photo library to save the recorded videos.</string>
+
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
@@ -42,9 +51,9 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true/>
+		<true />
 		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
+		<true />
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -57,6 +66,6 @@
 			</dict>
 		</array>
 		<key>UIStatusBarHidden</key>
-		<false/>
+		<false />
 	</dict>
 </plist>

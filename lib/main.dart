@@ -8,11 +8,11 @@ import 'screens/auth_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(const Seegle());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Seegle extends StatelessWidget {
+  const Seegle({super.key});
   final Color customYellow = const Color(0xFFFFCC02);
   final Color darkGray = const Color(0xFF333333);
   final Color lightGray = const Color(0xFF666666);

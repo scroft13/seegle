@@ -1,5 +1,5 @@
 {
-  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.configuration.updateBuildConfiguration": "automatic",
   "cSpell.words": [
     "Allrightey",
     "ARGB",
@@ -16,6 +16,7 @@
     "TLDR",
     "Unauth"
   ],
-  "cmake.sourceDirectory": "/Users/hal/seegle/linux",
-  "java.compile.nullAnalysis.mode": "automatic"
+  "cmake.sourceDirectory": "/Users/hal/seegle/windows",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable"
 }

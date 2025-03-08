@@ -9,9 +9,8 @@ class HomeScreen extends StatelessWidget {
     // final userProvider = Provider.of<UserProvider>(context);
     // var username = userProvider.user?.username ?? "No username available";
 
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        // heightFactor: 20,
         child: Flex(
           direction: Axis.vertical,
           children: [
@@ -20,9 +19,12 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Expanded(
-                      child: SizedBox(height: 500, child: SquawkListWidget())),
-                  // Use the custom button widget
+                  Flexible(
+                    child: Container(
+                      color: Color(0xffffffff),
+                      child: SquawkListWidget(),
+                    ),
+                  ),
                 ],
               ),
             ),

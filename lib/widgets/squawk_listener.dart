@@ -74,9 +74,9 @@ class SquawkListWidget extends StatelessWidget {
                                 Text(
                                   formatLocalDateTime(data['timestamp']),
                                   style: const TextStyle(
-                                    color: AppColors.lightGrey,
+                                    color: Colors.black,
                                     fontSize: 12,
-                                    fontWeight: FontWeight.w300,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
@@ -87,7 +87,7 @@ class SquawkListWidget extends StatelessWidget {
                             Text(
                               data['title'],
                               style: const TextStyle(
-                                color: AppColors.lightGrey,
+                                color: AppColors.darkGrey,
                                 fontSize: 13,
                               ),
                               maxLines: 2, // Maximum number of lines to show

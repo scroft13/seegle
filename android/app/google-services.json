@@ -7,42 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:570472137763:android:aceed3024c4a94feb89d96",
-        "android_client_info": {
-          "package_name": "com.sdotlabs.seegle"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "570472137763-uqcb3rvl40urhbbq2kafaem4ln38lqdf.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD-OtJs2IMAD0xcuweY22ErM7_2_JqXjTE"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "570472137763-uqcb3rvl40urhbbq2kafaem4ln38lqdf.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "570472137763-207drij2vqa61qjkj55urhd55vu169k5.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.sdotlabs.seegle"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:570472137763:android:4d40abc96e95c4e7b89d96",
         "android_client_info": {
           "package_name": "com.sdotlabs.seegle"

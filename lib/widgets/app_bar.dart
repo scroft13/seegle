@@ -1,32 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:seegle/user_provider.dart';
-import 'package:seegle/widgets/profile_pic.dart';
+// import 'package:provider/provider.dart';
+import 'package:seegle/widgets/add_flock_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final bool showProfileButton; // Whether to show the exit button
-
   const CustomAppBar({
     super.key,
-    required this.title,
-    this.showProfileButton = false, // Default to not showing the exit button
   });
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
+    // final userProvider = Provider.of<UserProvider>(context);
     return AppBar(
-      title: Text(title),
-      leading: Container(),
-      automaticallyImplyLeading:
-          false, // Assume we manage the leading widget ourselves
-      actions: <Widget>[
-        if (showProfileButton)
-          ProfilePictureWidget(
-            photoUrl: userProvider.user?.photoUrl ??
-                '', // Replace with your actual URL
+      backgroundColor: Colors.white,
+      toolbarHeight: 44,
+      leading: Row(
+        children: [
+          const SizedBox(width: 16),
+          const Text(
+            'Seegle',
+            style: TextStyle(
+              fontSize: 26,
+              color: Colors.black,
+              fontFamily: 'NexaLight',
+            ),
           ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: Image.asset('assets/icon/icon.png', height: 32),
+          ),
+        ],
+      ),
+      leadingWidth: 160, // Adjust width based on your title & icon spacing
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6.0, right: 12),
+          child: AddFlockButton(),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 12.0),
+          child: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search_sharp),
+            color: Colors.black,
+            iconSize: 28,
+          ),
+        ),
       ],
     );
   }

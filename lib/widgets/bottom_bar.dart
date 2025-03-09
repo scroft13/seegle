@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:seegle/styles.dart';
 import 'package:seegle/widgets/custom_dialog.dart';
-import 'add_flock_button.dart';
 
 class CustomBottomNavigationBar extends StatefulWidget {
   final Function(int) onTap;
@@ -34,7 +33,7 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
           children: [
             IconButton(
               icon: const Icon(Icons.home_outlined),
-              iconSize: 30,
+              iconSize: currentIndex == 0 ? 40 : 30,
               onPressed: () {
                 setIndex(0);
               },
@@ -45,23 +44,14 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.darkGrey,
-                  // color: Colors.blue,
-                  borderRadius: BorderRadius.circular(
-                      50), // 50% of the container's height
+                  borderRadius: BorderRadius.circular(50),
                 ),
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 20),
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.add_sharp,
-                        color: Colors.white,
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
                       Text(
-                        'New Flock',
+                        'My Flocks',
                         style: TextStyle(
                           color: Colors.white,
                         ),
@@ -75,16 +65,13 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
                   context: context,
                   barrierDismissible: false,
                   builder: (BuildContext context) {
-                    // Dialog cannot be dismissed by tapping outside
-
                     return const MyCustomDialog();
                   },
                 );
               },
             ),
-            const AddFlockButton(),
             IconButton(
-              iconSize: 30,
+              iconSize: currentIndex == 1 ? 40 : 30,
               icon: const Icon(Icons.person_outline),
               onPressed: () {
                 setIndex(1);

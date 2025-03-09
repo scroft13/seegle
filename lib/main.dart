@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:seegle/screens/profile_screen.dart';
+import 'package:seegle/theme.dart';
 import 'user_provider.dart';
 import 'screens/auth_screen.dart';
 
@@ -14,8 +15,8 @@ Future<void> main() async {
 class Seegle extends StatelessWidget {
   const Seegle({super.key});
   final Color customYellow = const Color(0xFFFFCC02);
-  final Color darkGray = const Color(0xFF333333);
-  final Color lightGray = const Color(0xFF666666);
+  final Color darkGray = const Color(0xFF999999);
+  final Color lightGray = const Color(0xFFdddddd);
   final Color primaryColor = const Color(0xFFFFCC00); // Yellow
   final Color backgroundColor = const Color(0xFF333333); // Dark gray
   final Color darkFontColor = const Color(0xFFCCCCCC);
@@ -38,51 +39,51 @@ class Seegle extends StatelessWidget {
       child: MaterialApp(
           title: 'Seegle',
           initialRoute: '/',
-          theme: ThemeData(
-            colorScheme: ColorScheme(
-              brightness: Brightness.light,
-              primary: primaryColor,
-              onPrimary: Colors
-                  .black, // Ensuring text/icons on primary color are visible
-              secondary: secondaryColor,
-              onSecondary: onSecondaryColor,
-              error: errorColor,
-              onError: onErrorColor, // Text color for background areas
-              surface: darkFontColor,
-              onSurface: darkFontColor, // Inp)
-            ),
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme(
-              brightness: Brightness.dark,
-              primary: primaryColor,
-              onPrimary: Colors
-                  .black, // Ensuring text/icons on primary color are visible
-              secondary: secondaryColor,
-              onSecondary: onSecondaryColor,
-              error: errorColor,
-              onError: onErrorColor, // Text color for background areas
-              surface: darkFontColor,
-              onSurface: darkFontColor, // Inp)
-            ),
-            switchTheme: SwitchThemeData(
-              trackColor: WidgetStateProperty.resolveWith<Color?>(
-                (Set<WidgetState> states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return WidgetStateColor.resolveWith((states) =>
-                        customYellow); // Color when button is pressed
-                  }
-                  return WidgetStateColor.resolveWith(
-                      (states) => darkGray); // Default color
-                },
-              ),
-              // overlayColor:
-              //     MaterialStateColor.resolveWith((states) => lightGray),
-              thumbColor: WidgetStateColor.resolveWith((states) => lightGray),
-              trackOutlineColor:
-                  WidgetStateColor.resolveWith((states) => lightGray),
-            ),
-          ),
+          theme: AppTheme.lightTheme,
+          // theme: ThemeData(
+          //   colorScheme: ColorScheme(
+          //     brightness: Brightness.light,
+          //     primary: primaryColor,
+          //     onPrimary: Colors
+          //         .black,
+          //     secondary: secondaryColor,
+          //     onSecondary: onSecondaryColor,
+          //     error: errorColor,
+          //     onError: onErrorColor,
+          //     surface: darkFontColor,
+          //     onSurface: darkFontColor,
+          //   ),
+          // ),
+          // darkTheme: ThemeData(
+          //   colorScheme: ColorScheme(
+          //     brightness: Brightness.dark,
+          //     primary: primaryColor,
+          //     onPrimary: Colors
+          //         .black,
+          //     secondary: secondaryColor,
+          //     onSecondary: onSecondaryColor,
+          //     error: errorColor,
+          //     onError: onErrorColor,
+          //     surface: darkFontColor,
+          //     onSurface: darkFontColor,
+          //   ),
+          //   switchTheme: SwitchThemeData(
+          //     trackColor: WidgetStateProperty.resolveWith<Color?>(
+          //       (Set<WidgetState> states) {
+          //         if (states.contains(WidgetState.selected)) {
+          //           return WidgetStateColor.resolveWith((states) =>
+          //               customYellow);
+          //         }
+          //         return WidgetStateColor.resolveWith(
+          //             (states) => darkGray);
+          //       },
+          //     ),
+
+          //     thumbColor: WidgetStateColor.resolveWith((states) => lightGray),
+          //     trackOutlineColor:
+          //         WidgetStateColor.resolveWith((states) => lightGray),
+          //   ),
+          // ),
           debugShowCheckedModeBanner: false,
           routes: {
             '/': (context) => AuthScreen(

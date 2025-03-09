@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:seegle/home_wrapper.dart';
 import 'package:seegle/models/user_model.dart';
+import 'package:seegle/styles.dart';
 import 'package:seegle/user_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
@@ -50,7 +52,8 @@ class UsernameRegistrationScreenState
     }
   }
 
-  _submit(context) async {
+  submitUsername() async {
+    print('now');
     final AuthService authService = AuthService();
 
     username = _usernameController.text;
@@ -129,7 +132,7 @@ class UsernameRegistrationScreenState
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const HomeWrapper()),
-        ); // Assuming you navigate to the home screen after this
+        );
       });
     }
   }
@@ -228,7 +231,6 @@ class UsernameRegistrationScreenState
                             style: TextStyle(
                               fontSize: 14,
                             ),
-                            // Ensures text wraps and clips overflow
                           ),
                         ),
                       ],
@@ -254,49 +256,33 @@ class UsernameRegistrationScreenState
               ),
             ),
             const SizedBox(height: 20),
-            Column(
-              children: [
-                GestureDetector(
-                  onTap: _isProcessing
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isProcessing = true;
-                          });
-                          await _submit(context);
-                          setState(() {
-                            _isProcessing = false;
-                          });
-                        },
-                  child: Container(
-                    width: 300,
-                    height: 75,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: const Color(0xFF333333),
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Color(0xFF999999),
-                              blurRadius: 20,
-                              spreadRadius: 2,
-                              blurStyle: BlurStyle.outer,
-                              offset: Offset(2, 5))
-                        ]),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: Text(
-                        _isProcessing ? 'Processing...' : 'Let\'s Go!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: const Color(0xFFFFCC00),
-                          fontSize: _isProcessing ? 24 : 48,
-                          fontFamily: 'Nexa Bold',
-                        ),
-                      ),
+            Align(
+              alignment: Alignment.center,
+              child: CupertinoButton(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGrey,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Text(
+                      _isProcessing ? 'Processing...' : 'Let\'s Go!',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
                     ),
                   ),
                 ),
-              ],
+                onPressed: () {
+                  setState(() {
+                    _isProcessing = true;
+                  });
+                  submitUsername();
+                  setState(() {
+                    _isProcessing = false;
+                  });
+                },
+              ),
             ),
             const SizedBox(height: 20),
             TextButton(

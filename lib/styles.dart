@@ -68,6 +68,6 @@ class AppColors {
   static const Color mediumGrey = Color(0xFFaaaaaa);
   static const Color lightGrey = Color(0xFFdddddd);
   static const Color accentColor = Color(0xFFFF0266);
-  static const Color backgroundColor = Color(0xFFE0E0E0);
+  static const Color backgroundColor = Color(0xFFFFFFFF);
   static const Color textColor = Color(0xFF333333);
 }

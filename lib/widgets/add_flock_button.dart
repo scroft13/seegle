@@ -3,114 +3,140 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddFlockButton extends StatefulWidget {
-  const AddFlockButton({Key? key}) : super(key: key);
+  const AddFlockButton({super.key});
 
   @override
-  State<AddFlockButton> createState() => _AddFlockButtonState();
+  _AddFlockButtonState createState() => _AddFlockButtonState();
 }
 
 class _AddFlockButtonState extends State<AddFlockButton> {
-  final _formKey = GlobalKey<FormState>();
-  final _flockNameController = TextEditingController();
-  bool _isPrivate = false;
+  final TextEditingController _flockNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  bool _isPrivate = true;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void _openBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        bool isPrivate = _isPrivate; // Local state for the switch
+
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Create a Flock",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: _flockNameController,
+                    decoration: InputDecoration(
+                      labelText: "Flock Name",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: "Description",
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Private", style: TextStyle(fontSize: 16)),
+                      Switch(
+                        value: isPrivate,
+                        onChanged: (bool value) {
+                          setModalState(() {
+                            isPrivate = value; // Update local state
+                          });
+                          setState(() {
+                            _isPrivate = value; // Update main state
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _addFlock,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 45),
+                    ),
+                    child: Text("Create Flock"),
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Future<void> _addFlock() async {
-    if (_formKey.currentState!.validate()) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        try {
-          await FirebaseFirestore.instance.collection('flocks').add({
-            'flockName': _flockNameController.text,
-            'isPrivate': _isPrivate,
-            'userId': user.uid,
-          });
-          // Clear the form and close the dialog.
-          _flockNameController.clear();
-          _isPrivate = false;
-          Navigator.of(context).pop();
-          // Optionally show a success message to the user.
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Flock added successfully!')),
-          );
-        } catch (e) {
-          // Handle errors appropriately, perhaps showing an error message.
-          print("Error adding flock: $e");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error adding flock.')),
-          );
-        }
-      } else {
-        // Handle the case where the user is not logged in.
-        print("User not logged in.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please log in to add a flock.')),
-        );
-      }
+    final String flockName = _flockNameController.text.trim();
+    final String description = _descriptionController.text.trim();
+    final User? user = _auth.currentUser;
+
+    if (flockName.isEmpty || description.isEmpty || user == null) {
+      return;
+    }
+
+    try {
+      await _firestore.collection("flocks").add({
+        "flockName": flockName,
+        "description": description,
+        "isPrivate": _isPrivate,
+        "createdBy": user.uid,
+        "createdAt": FieldValue.serverTimestamp(),
+        "squawks": [],
+        "users": [
+          {'UID': user.uid, 'username': user.displayName}
+        ]
+      });
+
+      Navigator.of(context).pop();
+      _flockNameController.clear();
+      _descriptionController.clear();
+      setState(() {
+        _isPrivate = false;
+      });
+    } catch (e) {
+      print("Error adding flock: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Add New Flock'),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    TextFormField(
-                      controller: _flockNameController,
-                      decoration:
-                          const InputDecoration(labelText: 'Flock Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a flock name';
-                        }
-                        return null;
-                      },
-                    ),
-                    Row(
-                      children: <Widget>[
-                        const Text('Private:'),
-                        Switch(
-                          value: _isPrivate,
-                          onChanged: (value) {
-                            setState(() {
-                              _isPrivate = value;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: _addFlock,
-                  child: const Text('Add Flock'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-      child: const Text('Add Flock'),
+    return Container(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        icon: const Icon(Icons.add, color: Colors.black),
+        onPressed: _openBottomSheet,
+      ),
     );
-  }
-
-  @override
-  void dispose() {
-    _flockNameController.dispose();
-    super.dispose();
   }
 }

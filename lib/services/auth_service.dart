@@ -31,6 +31,10 @@ class AuthService {
     }
   }
 
+  User? get currentUser {
+    return _firebaseAuth.currentUser;
+  }
+
   Future<void> signInWithApple(context) async {
     try {
       final appleCredential =
@@ -66,10 +70,7 @@ class AuthService {
           ),
         );
       } else {
-        // Existing user with username
-        // Proceed to home or main screen
         Provider.of<UserProvider>(context, listen: false).clearUser();
-
         Provider.of<UserProvider>(context, listen: false).setUser(user.uid);
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -105,7 +106,5 @@ class AuthService {
     Provider.of<UserProvider>(context, listen: false).clearUser();
     await GoogleSignIn().signOut();
     Navigator.of(context).popAndPushNamed('/');
-    // Ensure Google sign-out
-    // Apple sign-out handled implicitly with Firebase sign-out
   }
 }

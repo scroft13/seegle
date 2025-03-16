@@ -27,7 +27,6 @@ class UsernameRegistrationScreenState
     extends State<UsernameRegistrationScreen> {
   final _usernameController = TextEditingController();
   bool _isProcessing = false;
-  // String _errorMessage = '';
   bool _agree = false;
   String? username;
   final usernameRef = FirebaseFirestore.instance.collection('usernames');
@@ -143,7 +142,6 @@ class UsernameRegistrationScreenState
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          // crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 55.0),

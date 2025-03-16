@@ -21,7 +21,6 @@ abstract class Styles {
   static const TextStyle questionText = TextStyle(
     color: Color(0xFF333333),
     fontSize: 14,
-    // fontStyle: FontStyle.italic,
   );
   static const TextStyle questionCategory = TextStyle(
     color: Color(0xFF333333),

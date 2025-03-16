@@ -33,8 +33,6 @@ class AuthScreenState extends State<AuthScreen> {
   }
 
   handleLogin(context) async {
-    // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-
     await _authService.postSignInProcess(
         FirebaseAuth.instance.currentUser, context);
   }

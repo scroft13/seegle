@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
 import 'package:seegle/widgets/add_flock_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -9,7 +8,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final userProvider = Provider.of<UserProvider>(context);
     return AppBar(
       backgroundColor: Colors.white,
       toolbarHeight: 44,
@@ -32,7 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      leadingWidth: 160, // Adjust width based on your title & icon spacing
+      leadingWidth: 160,
       actions: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6.0, right: 12),

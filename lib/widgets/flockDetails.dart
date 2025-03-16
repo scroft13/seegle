@@ -15,8 +15,8 @@ class FlockDetailsScreen extends StatefulWidget {
 }
 
 class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
-  bool _isExpanded = false; // Track the expanded state of the description
-  String flockName = ''; // Flock name variable
+  bool _isExpanded = false;
+  String flockName = '';
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +35,6 @@ class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
                     Navigator.pop(context);
                   },
                 ),
-
-              // Use Expanded to allow the text to adjust its width
-
               const Text(
                 'Seegle',
                 style: TextStyle(
@@ -46,7 +43,6 @@ class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
                   fontFamily: 'NexaLight',
                 ),
               ),
-
               Column(
                 children: [
                   const SizedBox(height: 8),
@@ -93,21 +89,18 @@ class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
           bool isPrivate = data['isPrivate'] ?? false;
           List<dynamic> squawks = data['squawks'] ?? [];
 
-          // Use post-frame callback to update the flockName
           if (flockName.isEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               setState(() {
-                flockName = data['flockName'] ??
-                    "Unnamed Flock"; // Set flockName from Firestore data
+                flockName = data['flockName'] ?? "Unnamed Flock";
               });
             });
           }
 
-          // Limit the description to two lines and toggle expand/collapse
           String descriptionToDisplay = description.length > 100
               ? _isExpanded
                   ? description
-                  : '${description.substring(0, 100)}...'
+                  : description.substring(0, 100) + '...'
               : description;
 
           return SingleChildScrollView(

@@ -121,7 +121,7 @@ class _VideoRecorderWidgetState extends State<VideoRecorderWidget> {
           'timestamp': FieldValue.serverTimestamp(),
           'title': widget.title,
           'username': username,
-          'photoUrl': photoUrl, // Example content
+          'photoUrl': photoUrl,
         });
 
         setState(() {

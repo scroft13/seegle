@@ -21,7 +21,6 @@ class _NewSquawkDialogState extends State<NewSquawkDialog> {
     });
   }
 
-  // Function to add a new squawk to Firestore
   Future<void> _createNewSquawk(context) async {
     try {
       Navigator.of(context).pop();

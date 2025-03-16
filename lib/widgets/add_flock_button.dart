@@ -24,7 +24,7 @@ class _AddFlockButtonState extends State<AddFlockButton> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        bool isPrivate = _isPrivate; // Local state for the switch
+        bool isPrivate = _isPrivate;
 
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
@@ -68,10 +68,10 @@ class _AddFlockButtonState extends State<AddFlockButton> {
                         value: isPrivate,
                         onChanged: (bool value) {
                           setModalState(() {
-                            isPrivate = value; // Update local state
+                            isPrivate = value;
                           });
                           setState(() {
-                            _isPrivate = value; // Update main state
+                            _isPrivate = value;
                           });
                         },
                       ),

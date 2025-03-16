@@ -16,7 +16,7 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
-          fontFamily: 'Serif', // Adjust for an elegant font
+          fontFamily: 'Serif',
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -80,35 +80,32 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
-            return Color(0xFFFFCC00); // Color when the switch is ON
+            return Color(0xFFFFCC00);
           }
-          return Colors.grey; // Color when the switch is OFF
+          return Colors.grey;
         }),
         trackColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
-            return Colors.grey[300]!.withOpacity(0.4); // Active track color
+            return Colors.grey[300]!.withOpacity(0.4);
           }
-          return Colors.grey.withOpacity(0.4); // Inactive track color
+          return Colors.grey.withOpacity(0.4);
         }),
         trackOutlineColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
-            return Color(0xFFFFCC00)
-                .withOpacity(0.8); // Active track border color
+            return Color(0xFFFFCC00).withOpacity(0.8);
           }
-          return Colors.grey.withOpacity(0.8); // Inactive track border color
+          return Colors.grey.withOpacity(0.8);
         }),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: Colors.white, // White background for contrast
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          side: BorderSide(
-              color: Colors.black, width: 1), // Black border for separation
+          side: BorderSide(color: Colors.black, width: 1),
         ),
-        elevation: 5, // Slight elevation for depth
-        modalBackgroundColor: Colors.white, // For modal bottom sheets
-        modalBarrierColor:
-            Colors.black.withOpacity(0.3), // Subtle backdrop effect
+        elevation: 5,
+        modalBackgroundColor: Colors.white,
+        modalBarrierColor: Colors.black.withOpacity(0.3),
       ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
@@ -118,18 +115,17 @@ class AppTheme {
           textStyle: MaterialStateProperty.resolveWith<TextStyle?>(
             (states) {
               return TextStyle(
-                fontSize: 18, // Set the desired text size
-                fontWeight:
-                    FontWeight.bold, // You can also add other properties
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               );
             },
           ),
         ),
       ),
       dialogTheme: DialogTheme(
-        backgroundColor: Colors.white, // change the background color here
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20), // optional: rounded corners
+          borderRadius: BorderRadius.circular(20),
         ),
       ),
     );

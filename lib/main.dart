@@ -6,6 +6,9 @@ import 'package:seegle/theme.dart';
 import 'user_provider.dart';
 import 'screens/auth_screen.dart';
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -37,60 +40,18 @@ class Seegle extends StatelessWidget {
         )
       ],
       child: MaterialApp(
-          title: 'Seegle',
-          initialRoute: '/',
-          theme: AppTheme.lightTheme,
-          // theme: ThemeData(
-          //   colorScheme: ColorScheme(
-          //     brightness: Brightness.light,
-          //     primary: primaryColor,
-          //     onPrimary: Colors
-          //         .black,
-          //     secondary: secondaryColor,
-          //     onSecondary: onSecondaryColor,
-          //     error: errorColor,
-          //     onError: onErrorColor,
-          //     surface: darkFontColor,
-          //     onSurface: darkFontColor,
-          //   ),
-          // ),
-          // darkTheme: ThemeData(
-          //   colorScheme: ColorScheme(
-          //     brightness: Brightness.dark,
-          //     primary: primaryColor,
-          //     onPrimary: Colors
-          //         .black,
-          //     secondary: secondaryColor,
-          //     onSecondary: onSecondaryColor,
-          //     error: errorColor,
-          //     onError: onErrorColor,
-          //     surface: darkFontColor,
-          //     onSurface: darkFontColor,
-          //   ),
-          //   switchTheme: SwitchThemeData(
-          //     trackColor: WidgetStateProperty.resolveWith<Color?>(
-          //       (Set<WidgetState> states) {
-          //         if (states.contains(WidgetState.selected)) {
-          //           return WidgetStateColor.resolveWith((states) =>
-          //               customYellow);
-          //         }
-          //         return WidgetStateColor.resolveWith(
-          //             (states) => darkGray);
-          //       },
-          //     ),
-
-          //     thumbColor: WidgetStateColor.resolveWith((states) => lightGray),
-          //     trackOutlineColor:
-          //         WidgetStateColor.resolveWith((states) => lightGray),
-          //   ),
-          // ),
-          debugShowCheckedModeBanner: false,
-          routes: {
-            '/': (context) => AuthScreen(
-                  shouldShowScaffold: true,
-                ),
-            '/profile': (context) => const ProfilePage(),
-          }),
+        scaffoldMessengerKey: rootScaffoldMessengerKey,
+        title: 'Seegle',
+        initialRoute: '/',
+        theme: AppTheme.lightTheme,
+        debugShowCheckedModeBanner: false,
+        routes: {
+          '/': (context) => AuthScreen(
+                shouldShowScaffold: true,
+              ),
+          '/profile': (context) => const ProfilePage(),
+        },
+      ),
     );
   }
 }

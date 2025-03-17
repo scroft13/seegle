@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:seegle/screens/home_screen.dart';
+import 'package:seegle/screens/private_screen.dart';
+import 'package:seegle/screens/public_screen.dart';
 import 'package:seegle/screens/profile_screen.dart';
 import 'package:seegle/styles.dart';
-import 'package:seegle/widgets/add_flock_button.dart';
 import 'package:seegle/widgets/app_bar.dart';
 import 'package:seegle/widgets/bottom_bar.dart';
-import 'package:seegle/widgets/flockDetails.dart';
+import 'package:seegle/screens/flock_details.dart';
 
 final squawkRef = FirebaseFirestore.instance.collection('groupNotification');
 
@@ -32,14 +32,13 @@ class _HomeWrapperState extends State<HomeWrapper> {
     super.dispose();
   }
 
-  // Function to navigate to the flock details screen
   void _navigateToFlockDetails(String flockId) {
     Navigator.push(
       context,
       MaterialPageRoute(
+        fullscreenDialog: false,
         builder: (context) => FlockDetailsScreen(
           flockId: flockId,
-          pageIndex: _pageIndex,
         ),
       ),
     );
@@ -57,9 +56,11 @@ class _HomeWrapperState extends State<HomeWrapper> {
               child: IndexedStack(
                 index: _pageIndex,
                 children: <Widget>[
-                  HomeScreen(
-                    onFlockTap:
-                        _navigateToFlockDetails, // Pass the function to handle tap
+                  PublicScreen(
+                    onFlockTap: _navigateToFlockDetails,
+                  ),
+                  PrivateScreen(
+                    onFlockTap: _navigateToFlockDetails,
                   ),
                   const ProfilePage(),
                 ],

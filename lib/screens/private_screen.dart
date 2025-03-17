@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:developer';
 
 import '../services/auth_service.dart';
 
@@ -66,9 +65,6 @@ class PrivateScreen extends StatelessWidget {
                                   data['flockName'] ?? "Unnamed Flock";
                               String description = data['description'] ??
                                   "No description available";
-
-                              log("Private Flock: $flockName, ID: ${flock.id}");
-
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 5),
                                 decoration: BoxDecoration(

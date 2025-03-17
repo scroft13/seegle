@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:developer';
 
 class PublicScreen extends StatelessWidget {
   final Function(String) onFlockTap;
@@ -55,9 +54,6 @@ class PublicScreen extends StatelessWidget {
                         String flockName = data['flockName'] ?? "Unnamed Flock";
                         String description =
                             data['description'] ?? "No description available";
-
-                        log("Public Flock: $flockName, ID: ${flock.id}, Private: ${!data['isPrivate']}");
-
                         return !data['isPrivate']
                             ? Container(
                                 margin: const EdgeInsets.symmetric(vertical: 5),

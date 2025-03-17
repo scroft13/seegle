@@ -60,7 +60,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
       toolbarHeight: 44,
       leading: Row(
         children: [
-          const SizedBox(width: 16),
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
           const Text(
             'Seegle',
             style: TextStyle(
@@ -73,11 +76,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
           SizedBox(
             width: 32,
             height: 32,
-            child: Image.asset('assets/icon/icon.png', height: 32),
+            child: Image.asset('assets/icons/icon.png', height: 32),
           ),
         ],
       ),
-      leadingWidth: 160,
+      leadingWidth: 200,
       actions: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6.0, right: 12),

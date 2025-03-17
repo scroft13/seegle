@@ -78,11 +78,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/launcher_icon.png"
+  image_path: "assets/icons/launcher_icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   web:
     generate: true
-    image_path: "assets/icon/launcher_icon.png"
+    image_path: "assets/icons/launcher_icon.png"
     background_color: "#hexcode"
     theme_color: "#hexcode"
 
@@ -95,7 +95,7 @@ flutter_native_splash:
 
   # The image parameter allows you to specify an image used in the splash screen.  It must be a
   # png file.
-  image: assets/icon/icon.png
+  image: assets/icons/icon.png
 
   # The color_dark, background_image_dark, and image_dark are parameters that set the background
   # and image when the device is in dark mode. If they are not specified, the app will use the
@@ -117,7 +117,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icon/
+    - assets/icons/
     - assets/fonts/
     - assets/images/
     - assets/sign_in/

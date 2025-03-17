@@ -52,31 +52,6 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
                     ? AppColors.darkGrey
                     : AppColors.mediumGrey,
               ),
-
-              // CupertinoButton(
-              //   child: Container(
-              //     decoration: BoxDecoration(
-              //       color: AppColors.darkGrey,
-              //       borderRadius: BorderRadius.circular(50),
-              //     ),
-              //     child: const Padding(
-              //       padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20),
-              //       child: Row(
-              //         children: [
-              //           Text(
-              //             'My Flocks',
-              //             style: TextStyle(
-              //               color: Colors.white,
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              //   onPressed: () {
-              //     setIndex(2);
-              //   },
-              // ),
               IconButton(
                 iconSize: currentIndex == 2 ? 40 : 30,
                 icon: const Icon(Seegle.winston),

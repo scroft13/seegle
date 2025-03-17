@@ -141,7 +141,7 @@ class AddFlockButtonState extends State<AddFlockButton> {
     }
 
     if (!mounted) {
-      return; // Ensure widget is still mounted before capturing context
+      return;
     }
     final BuildContext localContext = context;
 
@@ -154,7 +154,7 @@ class AddFlockButtonState extends State<AddFlockButton> {
             .get();
 
         if (existingPublicFlocks.docs.isNotEmpty) {
-          if (!localContext.mounted) return; // Ensure localContext is valid
+          if (!localContext.mounted) return;
           showDialog(
             context: localContext,
             builder: (BuildContext dialogContext) {
@@ -205,7 +205,7 @@ class AddFlockButtonState extends State<AddFlockButton> {
       });
 
       if (!localContext.mounted) {
-        return; // Ensure context is valid before navigating
+        return;
       }
       Navigator.of(localContext).pop();
 
@@ -215,8 +215,7 @@ class AddFlockButtonState extends State<AddFlockButton> {
         _isPrivate = true;
       });
     } catch (e) {
-      developer.log("Error adding flock: $e",
-          error: e); // Use log instead of print
+      developer.log("Error adding flock: $e", error: e);
     }
   }
 

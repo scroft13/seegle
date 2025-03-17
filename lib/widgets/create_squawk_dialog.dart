@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:seegle/styles.dart';
 import 'package:seegle/widgets/new_squawk_option.dart';
 import 'package:seegle/widgets/video_recorder.dart';
+import 'dart:developer';
 
 class NewSquawkDialog extends StatefulWidget {
   const NewSquawkDialog({super.key});
@@ -32,7 +33,7 @@ class _NewSquawkDialogState extends State<NewSquawkDialog> {
         ),
       );
     } catch (e) {
-      print("Error adding squawk: $e");
+      log("Error adding squawk: $e", error: e);
       Navigator.of(context).pop();
     }
   }

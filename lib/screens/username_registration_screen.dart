@@ -52,14 +52,13 @@ class UsernameRegistrationScreenState
   }
 
   submitUsername() async {
-    print('now');
     final AuthService authService = AuthService();
-
     username = _usernameController.text;
     var usernameCheckLowercase = username?.toLowerCase();
     DocumentSnapshot usernameCheck =
         await usernameRef.doc(usernameCheckLowercase).get();
     if (_agree == false) {
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) {
@@ -80,6 +79,7 @@ class UsernameRegistrationScreenState
     } else if (username!.length < 3 ||
         username!.length > 24 ||
         username!.isEmpty) {
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) {
@@ -98,6 +98,7 @@ class UsernameRegistrationScreenState
         },
       );
     } else if (usernameCheck.exists) {
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) {
@@ -116,6 +117,7 @@ class UsernameRegistrationScreenState
       );
     } else {
       await authService.setUsername(_usernameController.text, widget.user);
+      if (!mounted) return;
       Provider.of<UserProvider>(context, listen: false).clearUser();
       Provider.of<UserProvider>(context, listen: false)
           .setUser(widget.user.uid);

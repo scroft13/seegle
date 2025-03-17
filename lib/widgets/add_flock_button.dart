@@ -1,20 +1,52 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:seegle/user_provider.dart';
+import 'dart:developer' as developer; // Import logging framework
+import 'dart:math'; // Import Random for unique ID generation
 
 class AddFlockButton extends StatefulWidget {
   const AddFlockButton({super.key});
 
   @override
-  _AddFlockButtonState createState() => _AddFlockButtonState();
+  AddFlockButtonState createState() => AddFlockButtonState();
 }
 
-class _AddFlockButtonState extends State<AddFlockButton> {
+class AddFlockButtonState extends State<AddFlockButton> {
   final TextEditingController _flockNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   bool _isPrivate = true;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String _generateUniqueId(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final Random random = Random();
+    return List.generate(length, (index) => chars[random.nextInt(chars.length)])
+        .join();
+  }
+
+  Future<String> _generateUniqueNormalizedName(String baseName) async {
+    String uniqueId;
+    String newNormalizedName;
+    bool exists;
+
+    do {
+      uniqueId = _generateUniqueId(5);
+      newNormalizedName = "${baseName}_$uniqueId";
+
+      final QuerySnapshot existingFlocks = await _firestore
+          .collection("flocks")
+          .where("uniqueFlockName", isEqualTo: newNormalizedName)
+          .where("isPrivate", isEqualTo: true)
+          .get();
+
+      exists = existingFlocks.docs.isNotEmpty;
+    } while (exists);
+
+    return newNormalizedName;
+  }
 
   void _openBottomSheet() {
     showModalBottomSheet(
@@ -24,8 +56,6 @@ class _AddFlockButtonState extends State<AddFlockButton> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        bool isPrivate = _isPrivate;
-
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Padding(
@@ -65,12 +95,9 @@ class _AddFlockButtonState extends State<AddFlockButton> {
                     children: [
                       Text("Private", style: TextStyle(fontSize: 16)),
                       Switch(
-                        value: isPrivate,
+                        value: _isPrivate,
                         onChanged: (bool value) {
                           setModalState(() {
-                            isPrivate = value;
-                          });
-                          setState(() {
                             _isPrivate = value;
                           });
                         },
@@ -98,39 +125,104 @@ class _AddFlockButtonState extends State<AddFlockButton> {
   Future<void> _addFlock() async {
     final String flockName = _flockNameController.text.trim();
     final String description = _descriptionController.text.trim();
-    final User? user = _auth.currentUser;
+    final User? firebaseUser = _auth.currentUser;
 
-    if (flockName.isEmpty || description.isEmpty || user == null) {
+    if (flockName.isEmpty || description.isEmpty || firebaseUser == null) {
       return;
     }
 
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final String username = userProvider.user?.username ?? 'Unknown';
+
+    String uniqueFlockName =
+        flockName.replaceAll(RegExp(r"\s+"), "").toLowerCase();
+    if (!uniqueFlockName.startsWith("#")) {
+      uniqueFlockName = "#$uniqueFlockName";
+    }
+
+    if (!mounted) {
+      return; // Ensure widget is still mounted before capturing context
+    }
+    final BuildContext localContext = context;
+
     try {
+      if (!_isPrivate) {
+        final QuerySnapshot existingPublicFlocks = await _firestore
+            .collection("flocks")
+            .where("uniqueFlockName", isEqualTo: uniqueFlockName)
+            .where("isPrivate", isEqualTo: false)
+            .get();
+
+        if (existingPublicFlocks.docs.isNotEmpty) {
+          if (!localContext.mounted) return; // Ensure localContext is valid
+          showDialog(
+            context: localContext,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                title: const Text("Flock Name Taken"),
+                content: const Text(
+                    "A public flock with this name already exists. Please choose a different name."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (localContext.mounted) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+          return;
+        }
+      } else {
+        final QuerySnapshot existingPrivateFlocks = await _firestore
+            .collection("flocks")
+            .where("uniqueFlockName", isEqualTo: uniqueFlockName)
+            .where("isPrivate", isEqualTo: true)
+            .get();
+
+        if (existingPrivateFlocks.docs.isNotEmpty) {
+          uniqueFlockName =
+              await _generateUniqueNormalizedName(uniqueFlockName);
+        }
+      }
+
       await _firestore.collection("flocks").add({
         "flockName": flockName,
+        "uniqueFlockName": uniqueFlockName,
         "description": description,
         "isPrivate": _isPrivate,
-        "createdBy": user.uid,
+        "createdBy": firebaseUser.uid,
         "createdAt": FieldValue.serverTimestamp(),
         "squawks": [],
         "users": [
-          {'UID': user.uid, 'username': user.displayName}
-        ]
+          {'UID': firebaseUser.uid, 'username': username}
+        ],
+        "banned": []
       });
 
-      Navigator.of(context).pop();
+      if (!localContext.mounted) {
+        return; // Ensure context is valid before navigating
+      }
+      Navigator.of(localContext).pop();
+
       _flockNameController.clear();
       _descriptionController.clear();
       setState(() {
-        _isPrivate = false;
+        _isPrivate = true;
       });
     } catch (e) {
-      print("Error adding flock: $e");
+      developer.log("Error adding flock: $e",
+          error: e); // Use log instead of print
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 36,
       height: 36,
       child: IconButton(

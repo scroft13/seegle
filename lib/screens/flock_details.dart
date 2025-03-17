@@ -1,74 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:seegle/styles.dart';
-import 'package:seegle/widgets/bottom_bar.dart';
+import 'package:seegle/widgets/app_bar.dart';
 
 class FlockDetailsScreen extends StatefulWidget {
   final String flockId;
-  num pageIndex;
 
-  FlockDetailsScreen(
-      {super.key, required this.flockId, required this.pageIndex});
+  const FlockDetailsScreen({super.key, required this.flockId});
 
   @override
-  _FlockDetailsScreenState createState() => _FlockDetailsScreenState();
+  FlockDetailsScreenState createState() => FlockDetailsScreenState();
 }
 
-class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
+class FlockDetailsScreenState extends State<FlockDetailsScreen> {
   bool _isExpanded = false;
   String flockName = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 44,
-        leading: SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              if (Navigator.canPop(context))
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              const Text(
-                'Seegle',
-                style: TextStyle(
-                  fontSize: 30,
-                  color: AppColors.darkGrey,
-                  fontFamily: 'NexaLight',
-                ),
-              ),
-              Column(
-                children: [
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 40,
-                    height: 30,
-                    child: Image.asset('assets/icon/icon.png', height: 40),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        leadingWidth: 209,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15.0),
-            child: IconButton(
-              onPressed: () => {},
-              icon: const Icon(Icons.search_sharp),
-              color: AppColors.mediumGrey,
-              iconSize: 32,
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
             .collection('flocks')
@@ -100,7 +50,7 @@ class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
           String descriptionToDisplay = description.length > 100
               ? _isExpanded
                   ? description
-                  : description.substring(0, 100) + '...'
+                  : "${description.substring(0, 100)}..."
               : description;
 
           return SingleChildScrollView(
@@ -148,13 +98,6 @@ class _FlockDetailsScreenState extends State<FlockDetailsScreen> {
               ),
             ),
           );
-        },
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        onTap: (index) {
-          setState(() {
-            widget.pageIndex = index;
-          });
         },
       ),
     );

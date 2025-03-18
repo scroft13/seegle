@@ -33,8 +33,6 @@ class AuthScreenState extends State<AuthScreen> {
   }
 
   handleLogin(context) async {
-    // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-
     await _authService.postSignInProcess(
         FirebaseAuth.instance.currentUser, context);
   }
@@ -54,7 +52,7 @@ class AuthScreenState extends State<AuthScreen> {
                   Image(
                     width: cWidth,
                     image: const AssetImage(
-                        'assets/icon/seegle_logo_with_words.png'),
+                        'assets/icons/seegle_logo_with_words.png'),
                     semanticLabel: "Seegle Icon",
                   ),
                   Column(
@@ -128,7 +126,7 @@ class AuthScreenState extends State<AuthScreen> {
                   Image(
                     width: cWidth,
                     image: const AssetImage(
-                        'assets/icon/seegle_logo_with_words.png'),
+                        'assets/icons/seegle_logo_with_words.png'),
                     semanticLabel: "Seegle Icon",
                   ),
                   Column(

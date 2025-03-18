@@ -1,9 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:seegle/screens/home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:seegle/screens/private_screen.dart';
+import 'package:seegle/screens/public_screen.dart';
 import 'package:seegle/screens/profile_screen.dart';
+import 'package:seegle/store/store.dart';
 import 'package:seegle/styles.dart';
+import 'package:seegle/widgets/app_bar.dart';
 import 'package:seegle/widgets/bottom_bar.dart';
+import 'package:seegle/screens/flock_details.dart';
 
 final squawkRef = FirebaseFirestore.instance.collection('groupNotification');
 
@@ -17,6 +22,9 @@ class HomeWrapper extends StatefulWidget {
 }
 
 class _HomeWrapperState extends State<HomeWrapper> {
+  int _pageIndex = 0;
+  String? flockId;
+
   @override
   void initState() {
     super.initState();
@@ -27,61 +35,25 @@ class _HomeWrapperState extends State<HomeWrapper> {
     super.dispose();
   }
 
-  int _pageIndex = 0;
+  void _navigateToFlockDetails(String flockId) {
+    Provider.of<AppStore>(context, listen: false).setFlockId(flockId);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: false,
+        builder: (context) => FlockDetailsScreen(
+          flockId: flockId,
+        ),
+      ),
+    );
+  }
+
+  void printNavStack(BuildContext context) {}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // title: Text('Seegle'),
-        backgroundColor: Colors.white,
-        toolbarHeight: 44,
-        leading: SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              const SizedBox(
-                width: 28,
-              ),
-              const Text(
-                'Seegle',
-                style: TextStyle(
-                  fontSize: 30,
-                  color: AppColors.darkGrey,
-                  fontFamily: 'NexaLight',
-                ),
-              ),
-              Column(
-                children: [
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  SizedBox(
-                    width: 40,
-                    height: 30,
-                    child: Image.asset(
-                      'assets/icon/icon.png',
-                      height: 40,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        leadingWidth: 184,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15.0),
-            child: IconButton(
-              onPressed: () => {},
-              icon: const Icon(Icons.search_sharp),
-              color: AppColors.mediumGrey,
-              iconSize: 32,
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(flockId: flockId ?? ''),
       body: Flex(
         direction: Axis.vertical,
         children: [
@@ -89,10 +61,14 @@ class _HomeWrapperState extends State<HomeWrapper> {
             child: SafeArea(
               child: IndexedStack(
                 index: _pageIndex,
-                children: const <Widget>[
-                  HomeScreen(),
-                  // SquawkListWidget(),
-                  ProfilePage(),
+                children: <Widget>[
+                  PublicScreen(
+                    onFlockTap: _navigateToFlockDetails,
+                  ),
+                  PrivateScreen(
+                    onFlockTap: _navigateToFlockDetails,
+                  ),
+                  const ProfilePage(),
                 ],
               ),
             ),
@@ -100,16 +76,14 @@ class _HomeWrapperState extends State<HomeWrapper> {
           Container(
             height: .25,
             color: AppColors.lightGrey,
-          )
+          ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         onTap: (index) {
-          setState(
-            () {
-              _pageIndex = index;
-            },
-          );
+          setState(() {
+            _pageIndex = index;
+          });
         },
       ),
     );

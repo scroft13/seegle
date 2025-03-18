@@ -21,7 +21,6 @@ abstract class Styles {
   static const TextStyle questionText = TextStyle(
     color: Color(0xFF333333),
     fontSize: 14,
-    // fontStyle: FontStyle.italic,
   );
   static const TextStyle questionCategory = TextStyle(
     color: Color(0xFF333333),
@@ -65,9 +64,9 @@ final kBodyText1 = TextStyle(
 class AppColors {
   static const Color primaryColor = Color(0xFFFFCC00);
   static const Color darkGrey = Color(0xFF333333);
-  static const Color mediumGrey = Color(0xFF666666);
-  static const Color lightGrey = Color(0xFF999999);
+  static const Color mediumGrey = Color(0xFFaaaaaa);
+  static const Color lightGrey = Color(0xFFdddddd);
   static const Color accentColor = Color(0xFFFF0266);
-  static const Color backgroundColor = Color(0xFFE0E0E0);
+  static const Color backgroundColor = Color(0xFFFFFFFF);
   static const Color textColor = Color(0xFF333333);
 }

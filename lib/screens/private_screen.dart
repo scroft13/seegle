@@ -68,9 +68,8 @@ class PrivateScreen extends StatelessWidget {
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 5),
                                 decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color:
-                                          Colors.grey.shade300), // ✅ Add border
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
                                   borderRadius: BorderRadius.circular(8),
                                   color: Colors.white,
                                 ),

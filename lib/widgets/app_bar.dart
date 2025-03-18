@@ -1,13 +1,16 @@
-import 'dart:async'; // ✅ Import Timer
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:seegle/screens/flock_details.dart';
+import 'package:seegle/store/store.dart';
 import 'package:seegle/widgets/add_flock_button.dart';
+import 'package:seegle/widgets/new_squawk_button.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const CustomAppBar({
-    super.key,
-  });
+  final String flockId;
+
+  const CustomAppBar({super.key, required this.flockId});
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -37,7 +40,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
       _searchDebounce!.cancel();
     }
 
-    _searchDebounce = Timer(const Duration(milliseconds: 250000000), () {
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
       if (mounted) {
         _filterFlocks(_searchController.text);
       }
@@ -60,10 +63,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
       toolbarHeight: 44,
       leading: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
+          Navigator.canPop(context)
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  onPressed: () => Navigator.pop(context),
+                )
+              : SizedBox(
+                  width: 20,
+                ),
           const Text(
             'Seegle',
             style: TextStyle(
@@ -84,7 +91,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6.0, right: 12),
-          child: AddFlockButton(),
+          child:
+              Navigator.canPop(context) ? NewSquawkButton() : AddFlockButton(),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 12.0),
@@ -115,6 +123,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   }
 
   void _navigateToFlock(String flockId) {
+    Provider.of<AppStore>(context, listen: false).setFlockId(flockId);
     Navigator.pop(context);
     Navigator.push(
       context,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:seegle/screens/private_screen.dart';
 import 'package:seegle/screens/public_screen.dart';
 import 'package:seegle/screens/profile_screen.dart';
+import 'package:seegle/store/store.dart';
 import 'package:seegle/styles.dart';
 import 'package:seegle/widgets/app_bar.dart';
 import 'package:seegle/widgets/bottom_bar.dart';
@@ -21,6 +23,7 @@ class HomeWrapper extends StatefulWidget {
 
 class _HomeWrapperState extends State<HomeWrapper> {
   int _pageIndex = 0;
+  String? flockId;
 
   @override
   void initState() {
@@ -33,6 +36,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
   }
 
   void _navigateToFlockDetails(String flockId) {
+    Provider.of<AppStore>(context, listen: false).setFlockId(flockId);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -44,10 +48,12 @@ class _HomeWrapperState extends State<HomeWrapper> {
     );
   }
 
+  void printNavStack(BuildContext context) {}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(flockId: flockId ?? ''),
       body: Flex(
         direction: Axis.vertical,
         children: [

@@ -72,10 +72,11 @@ class AuthService {
       } else {
         Provider.of<UserProvider>(context, listen: false).clearUser();
         Provider.of<UserProvider>(context, listen: false).setUser(user.uid);
-        Navigator.of(context).push(
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomeWrapper(),
           ),
+          (Route<dynamic> route) => false,
         );
       }
     }

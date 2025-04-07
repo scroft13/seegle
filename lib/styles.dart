@@ -64,7 +64,7 @@ final kBodyText1 = TextStyle(
 class AppColors {
   static const Color primaryColor = Color(0xFFFFCC00);
   static const Color darkGrey = Color(0xFF333333);
-  static const Color mediumGrey = Color(0xFFaaaaaa);
+  static const Color mediumGrey = Color(0xFF999999);
   static const Color lightGrey = Color(0xFFdddddd);
   static const Color accentColor = Color(0xFFFF0266);
   static const Color backgroundColor = Color(0xFFFFFFFF);

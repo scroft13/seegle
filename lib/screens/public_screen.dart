@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:seegle/styles.dart';
 
 class PublicScreen extends StatelessWidget {
   final Function(String) onFlockTap;
@@ -9,7 +10,11 @@ class PublicScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('flocks').snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('flocks')
+            .orderBy('squawks', descending: true) // Sort by latest squawk first
+            .orderBy('createdAt', descending: false) // Then by creation date
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -58,9 +63,8 @@ class PublicScreen extends StatelessWidget {
                             ? Container(
                                 margin: const EdgeInsets.symmetric(vertical: 5),
                                 decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color:
-                                          Colors.grey.shade300), // ✅ Add border
+                                  border:
+                                      Border.all(color: AppColors.mediumGrey),
                                   borderRadius: BorderRadius.circular(8),
                                   color: Colors.white,
                                 ),
@@ -76,7 +80,8 @@ class PublicScreen extends StatelessWidget {
                                     description,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.grey),
+                                    style: const TextStyle(
+                                        color: AppColors.mediumGrey),
                                   ),
                                   onTap: () => onFlockTap(flock.id),
                                 ),

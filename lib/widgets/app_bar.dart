@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:seegle/screens/flock_details.dart';
 import 'package:seegle/store/store.dart';
+import 'package:seegle/styles.dart';
 import 'package:seegle/widgets/add_flock_button.dart';
 import 'package:seegle/widgets/new_squawk_button.dart';
 
@@ -66,8 +67,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
           Navigator.canPop(context)
               ? IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
-                )
+                  onPressed: () =>
+                      Navigator.canPop(context) ? Navigator.pop(context) : null)
               : SizedBox(
                   width: 20,
                 ),
@@ -209,7 +210,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       normalizedName,
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        color: Colors.grey,
+                                        color: AppColors.mediumGrey,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -224,7 +225,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 description,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: AppColors.mediumGrey,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,

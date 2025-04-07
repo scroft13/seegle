@@ -51,7 +51,7 @@ class UsernameRegistrationScreenState
     }
   }
 
-  submitUsername() async {
+  Future<void> submitUsername() async {
     final AuthService authService = AuthService();
     username = _usernameController.text;
     var usernameCheckLowercase = username?.toLowerCase();
@@ -130,7 +130,7 @@ class UsernameRegistrationScreenState
         timeInSecForIosWeb: 2,
       );
       Timer(const Duration(milliseconds: 100), () {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeWrapper()),
         );

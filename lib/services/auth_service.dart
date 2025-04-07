@@ -64,7 +64,7 @@ class AuthService {
             email: user.email!,
             photoUrl: user.photoURL,
             isBanned: false);
-        Navigator.of(context).push(
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => UsernameRegistrationScreen(user: userModel),
           ),
@@ -97,7 +97,8 @@ class AuthService {
       'internetPoints': user.internetPoints ?? 0,
       'photoUrl': user.photoUrl,
       'uid': user.uid,
-      'isBanned': false
+      'isBanned': false,
+      'isAdmin': false
     }, SetOptions(merge: true));
   }
 

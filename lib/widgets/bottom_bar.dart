@@ -1,6 +1,7 @@
 import 'package:seegle/seegle_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:seegle/styles.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomBottomNavigationBar extends StatefulWidget {
   final Function(int) onTap;
@@ -33,7 +34,16 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               IconButton(
-                icon: Icon(Seegle.hero),
+                icon: SvgPicture.asset(
+                  'assets/icons/globe_gull.svg',
+                  width: currentIndex == 0 ? 40 : 30,
+                  colorFilter: ColorFilter.mode(
+                    currentIndex == 0
+                        ? AppColors.darkGrey
+                        : AppColors.mediumGrey,
+                    BlendMode.srcIn,
+                  ),
+                ),
                 iconSize: currentIndex == 0 ? 40 : 30,
                 onPressed: () {
                   setIndex(0);
@@ -43,7 +53,16 @@ class _CustomBottomNavigationBar extends State<CustomBottomNavigationBar> {
                     : AppColors.mediumGrey,
               ),
               IconButton(
-                icon: const Icon(Seegle.squawkIcon),
+                icon: SvgPicture.asset(
+                  'assets/icons/shield_gull.svg',
+                  width: currentIndex == 1 ? 40 : 30,
+                  colorFilter: ColorFilter.mode(
+                    currentIndex == 1
+                        ? AppColors.darkGrey
+                        : AppColors.mediumGrey,
+                    BlendMode.srcIn,
+                  ),
+                ),
                 iconSize: currentIndex == 1 ? 40 : 30,
                 onPressed: () {
                   setIndex(1);

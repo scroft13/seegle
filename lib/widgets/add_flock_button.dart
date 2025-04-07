@@ -16,7 +16,7 @@ class AddFlockButton extends StatefulWidget {
 class AddFlockButtonState extends State<AddFlockButton> {
   final TextEditingController _flockNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  bool _isPrivate = true;
+  bool _isPrivate = false;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -190,24 +190,75 @@ class AddFlockButtonState extends State<AddFlockButton> {
         }
       }
 
-      await _firestore.collection("flocks").add({
-        "flockName": flockName,
-        "uniqueFlockName": uniqueFlockName,
-        "description": description,
-        "isPrivate": _isPrivate,
-        "createdBy": firebaseUser.uid,
-        "createdAt": FieldValue.serverTimestamp(),
-        "squawks": [],
-        "users": [
-          {'UID': firebaseUser.uid, 'username': username}
-        ],
-        "banned": []
-      });
+      String? uid = firebaseUser.uid;
 
-      if (!localContext.mounted) {
-        return;
+      if (_isPrivate) {
+        DocumentReference newFlockRef =
+            await _firestore.collection("flocks").add({
+          "flockName": flockName,
+          "uniqueFlockName": uniqueFlockName,
+          "description": description,
+          "isPrivate": _isPrivate,
+          "createdBy": firebaseUser.uid,
+          "createdAt": FieldValue.serverTimestamp(),
+          "squawks": [],
+          "banned": [],
+          "memberIds": [firebaseUser.uid]
+        });
+
+        await newFlockRef.update({
+          "members": {
+            uid: {
+              "username": username,
+              "joinedAt": FieldValue.serverTimestamp(),
+            }
+          }
+        });
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      } else {
+        DocumentReference newPubFlock =
+            await _firestore.collection("requested_flocks").add({
+          "flockName": flockName,
+          "uniqueFlockName": uniqueFlockName,
+          "description": description,
+          "isPrivate": _isPrivate,
+          "createdBy": firebaseUser.uid,
+          "createdAt": FieldValue.serverTimestamp(),
+          "squawks": [],
+          "banned": [],
+          "memberIds": [firebaseUser.uid]
+        });
+        await newPubFlock.update({
+          "members": {
+            uid: {
+              "username": username,
+              "joinedAt": FieldValue.serverTimestamp(),
+            }
+          }
+        });
+        if (localContext.mounted) {
+          showDialog(
+            context: localContext,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                title: const Text("Request Submitted"),
+                content: const Text(
+                    "Your request for a public flock has been sent for approval."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
-      Navigator.of(localContext).pop();
 
       _flockNameController.clear();
       _descriptionController.clear();

@@ -1,15 +1,16 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:seegle/styles.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: Colors.black,
+      primaryColor: Color(0xff333333),
       scaffoldBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xff333333),
         foregroundColor: Colors.white,
         elevation: 0,
         titleTextStyle: TextStyle(
@@ -34,18 +35,18 @@ class AppTheme {
         headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: Color(0xff333333),
           fontFamily: 'Serif',
         ),
         bodyMedium: TextStyle(
           fontSize: 16,
-          color: Colors.black,
+          color: Color(0xff333333),
           fontFamily: 'Serif',
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
+          backgroundColor: Color(0xff333333),
           foregroundColor: Colors.white,
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           shape: RoundedRectangleBorder(
@@ -55,24 +56,28 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.black,
-          side: const BorderSide(color: Colors.black, width: 2),
+          foregroundColor: Color(0xff333333),
+          side: const BorderSide(color: Color(0xff333333), width: 2),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
         ),
       ),
-      iconTheme: const IconThemeData(color: Colors.black),
+      iconTheme: const IconThemeData(
+        color: Color(0xff333333),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.black),
+          borderSide: const BorderSide(
+            color: Color(0xff333333),
+          ),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.black, width: 2),
+          borderSide: const BorderSide(color: Color(0xff333333), width: 2),
           borderRadius: BorderRadius.circular(8),
         ),
         hintStyle: const TextStyle(color: Colors.black54),
@@ -82,7 +87,7 @@ class AppTheme {
           if (states.contains(MaterialState.selected)) {
             return Color(0xFFFFCC00);
           }
-          return Colors.grey;
+          return AppColors.mediumGrey;
         }),
         trackColor: MaterialStateProperty.resolveWith<Color>((states) {
           if (states.contains(MaterialState.selected)) {
@@ -101,11 +106,11 @@ class AppTheme {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          side: BorderSide(color: Colors.black, width: 1),
+          side: BorderSide(color: Color(0xff333333), width: 1),
         ),
         elevation: 5,
         modalBackgroundColor: Colors.white,
-        modalBarrierColor: Colors.black.withOpacity(0.3),
+        modalBarrierColor: Color(0xff333333).withOpacity(0.3),
       ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(

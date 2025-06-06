@@ -1,5 +1,5 @@
 name: seegle
-description: "Seegle is a dynamic and engaging platform designed to bring people together through shared interests and meaningful discussions. Whether you’re passionate about gaming, fitness, coding, or any other hobby, Seegle allows you to create and join Flocks—communities where like-minded individuals connect, collaborate, and share insights. With real-time discussions, customizable privacy settings, and a user-friendly experience, Seegle ensures that every conversation feels personal and relevant. Public Flocks encourage open interaction, while private Flocks offer a more exclusive space for deeper engagement. Seegle also integrates push notifications, ensuring you never miss an important update, and features moderation tools to keep your community safe and engaging. Whether you’re looking to share knowledge, organize events, or simply chat with people who share your interests, Seegle is the perfect place to build and grow your digital community."
+description: "Seegle is a dynamic and engaging platform designed to bring people together through shared interests and meaningful discussions. Whether you're passionate about gaming, fitness, coding, or any other hobby, Seegle allows you to create and join Flocks—communities where like-minded individuals connect, collaborate, and share insights. With real-time discussions, customizable privacy settings, and a user-friendly experience, Seegle ensures that every conversation feels personal and relevant. Public Flocks encourage open interaction, while private Flocks offer a more exclusive space for deeper engagement. Seegle also integrates push notifications, ensuring you never miss an important update, and features moderation tools to keep your community safe and engaging. Whether you're looking to share knowledge, organize events, or simply chat with people who share your interests, Seegle is the perfect place to build and grow your digital community."
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
@@ -16,18 +16,17 @@ dependencies:
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
   google_sign_in: ^6.2.1
-  sign_in_with_apple: ^6.0.0
+  sign_in_with_apple: ^7.0.1
   flutter_signin_button: ^2.0.0
   crypto: ^3.0.3
   cloud_firestore: ^5.6.5
-  # agora_rtc_engine: ^6.3.0
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.0+1
   flutter_native_splash: ^2.4.0
   firebase_analytics: ^11.4.4
   get: ^4.6.6
   shared_preferences: ^2.2.3
   fluttertoast: ^8.2.5
-  url_launcher: ^6.2.6
+  url_launcher: ^6.2.11
   firebase_messaging: ^15.2.4
   slide_to_confirm: ^1.1.0
   getwidget: ^6.0.0
@@ -35,7 +34,7 @@ dependencies:
   flutter_linkify: ^6.0.0
   provider: ^6.0.2
   inner_shadow_widget: ^0.0.3
-  intl: ^0.20.2
+  intl: ^0.19.0
   google_fonts: ^6.2.1
   camera: ^0.11.0
   path_provider: ^2.0.11
@@ -45,16 +44,14 @@ dependencies:
   image_picker: ^1.1.2
   cached_network_image: ^3.3.0
   flutter_svg: ^2.0.17
+  metadata_fetch: ^0.4.2
+  giphy_get:
+    path: giphy_get
+  flutter_neumorphic_plus: ^3.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.3
 
@@ -94,9 +91,6 @@ flutter_native_splash:
 
 # The following section is specific to Flutter packages.
 flutter:
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
   assets:
@@ -106,13 +100,12 @@ flutter:
     - assets/sign_in/
     - assets/icons/globe_gull.svg
     - assets/icons/shield_gull.svg
+    - assets/fonts/testfile.txt
 
   fonts:
     - family: Nexa
       fonts:
         - asset: assets/fonts/NexaBold.otf
-    - family: NexaLight
-      fonts:
         - asset: assets/fonts/NexaLight.otf
     - family: Seegle
       fonts:

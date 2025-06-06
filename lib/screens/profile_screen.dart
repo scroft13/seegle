@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:seegle/services/auth_service.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,9 +21,11 @@ class ProfilePageState extends State<ProfilePage> {
   User? _currentUser;
   String _email = '';
   String _username = '';
+  String? _profileImageUrl;
   bool _isLoading = true;
-  bool _acceptsNotifications = false;
   bool _isAdmin = false;
+  bool _notificationsEnabled = true;
+  bool _defaultFlockNotifications = true;
 
   @override
   void initState() {
@@ -39,42 +45,101 @@ class ProfilePageState extends State<ProfilePage> {
         setState(() {
           _email = _currentUser!.email ?? 'No email available';
           _username = userDoc.data()?['username'] ?? 'No username set';
-          _acceptsNotifications =
-              userDoc.data()?['acceptsNotifications'] ?? false;
           _isAdmin = userDoc.data()?['isAdmin'] ?? false;
           _usernameController.text = _username;
+          _profileImageUrl = userDoc.data()?['profileImageUrl'];
           _isLoading = false;
         });
+      }
+
+      final settingsDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .collection('notification_settings')
+          .doc('profile')
+          .get();
+
+      if (settingsDoc.exists) {
+        final settings = settingsDoc.data()!;
+        _notificationsEnabled = settings['notificationsEnabled'] ?? true;
+        _defaultFlockNotifications =
+            settings['defaultFlockNotifications'] ?? true;
       }
     }
   }
 
-  Future<void> _toggleNotifications(bool value) async {
-    if (_currentUser != null) {
-      setState(() {
-        _acceptsNotifications = value;
-      });
+  Future<void> _uploadProfileImage() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser!.uid)
-          .update({"acceptsNotifications": value});
+    if (source != null) {
+      final pickedFile = await picker.pickImage(source: source);
+      if (pickedFile != null && _currentUser != null) {
+        final file = File(pickedFile.path);
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('uploads')
+            .child(_currentUser!.uid)
+            .child('profile.jpg');
+        final uploadTask = storageRef.putFile(file);
+        final snapshot = await uploadTask.whenComplete(() {});
+        final downloadUrl = await snapshot.ref.getDownloadURL();
 
-      if (value) {
-        String? token = await FirebaseMessaging.instance.getToken();
-        if (token != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(_currentUser!.uid)
-              .update({"fcmToken": token});
-        }
-      } else {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(_currentUser!.uid)
-            .update({"fcmToken": FieldValue.delete()});
+            .update({'profileImageUrl': downloadUrl});
+
+        setState(() {
+          _profileImageUrl = downloadUrl;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile image updated!')),
+          );
+        }
       }
     }
+  }
+
+  Future<void> _updateNotificationsEnabled(bool value) async {
+    setState(() => _notificationsEnabled = value);
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_currentUser!.uid)
+        .collection('notification_settings')
+        .doc('profile')
+        .set({'notificationsEnabled': value}, SetOptions(merge: true));
+  }
+
+  Future<void> _updateDefaultFlockNotifications(bool value) async {
+    setState(() => _defaultFlockNotifications = value);
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_currentUser!.uid)
+        .collection('notification_settings')
+        .doc('profile')
+        .set({'defaultFlockNotifications': value}, SetOptions(merge: true));
   }
 
   Future<void> _updateUsername() async {
@@ -131,180 +196,316 @@ class ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: CupertinoColors.white,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top section with email and gear icon inline
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Email: $_email",
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.settings, size: 28),
-                        onSelected: (value) {
-                          if (value == 'delete') {
-                            showModalBottomSheet(
-                              context: context,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                              ),
-                              builder: (context) => Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      'Are you sure you want to delete your account?',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        if (_currentUser != null) {
-                                          await FirebaseFirestore.instance
-                                              .collection('users')
-                                              .doc(_currentUser!.uid)
-                                              .delete();
-                                          await _currentUser!.delete();
-                                          if (context.mounted) {
-                                            Navigator.of(context).pop();
-                                            authService.signOut(context);
-                                          }
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white,
+          : SafeArea(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // Profile Card
+                          Neumorphic(
+                            style: NeumorphicStyle(
+                              depth: 10,
+                              intensity: 0.9,
+                              surfaceIntensity: 0.1,
+                              shape: NeumorphicShape.concave,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              color: const Color(0xFFFFFFFF),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 24, horizontal: 16),
+                              child: Column(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 50,
+                                        backgroundImage: _profileImageUrl !=
+                                                null
+                                            ? NetworkImage(_profileImageUrl!)
+                                            : null,
+                                        child: _profileImageUrl == null
+                                            ? const Icon(
+                                                CupertinoIcons.person_alt,
+                                                size: 50,
+                                                color:
+                                                    CupertinoColors.systemGrey)
+                                            : null,
                                       ),
-                                      child: const Text("Confirm Delete"),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem<String>(
-                            value: 'delete',
-                            child: Text('Delete Account'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Username section and change username field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Username: $_username",
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          labelText: "Change Username",
-                          border: OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.check),
-                            onPressed: _updateUsername,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SwitchListTile(
-                        title: const Text("Enable Notifications"),
-                        value: _acceptsNotifications,
-                        onChanged: _toggleNotifications,
-                      ),
-                    ],
-                  ),
-                  // Admin-only section for requested flocks
-                  if (_isAdmin)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Requested Flocks",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('requested_flocks')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const CircularProgressIndicator();
-                            }
-                            final requests = snapshot.data!.docs;
-                            if (requests.isEmpty) {
-                              return const Text("No pending requests.");
-                            }
-                            return Column(
-                              children: requests.map((doc) {
-                                final data = doc.data() as Map<String, dynamic>;
-                                return Card(
-                                  child: ListTile(
-                                    title: Text(data['flockName']),
-                                    subtitle: Text(data['description']),
-                                    trailing: ElevatedButton(
-                                      onPressed: () async {
-                                        await FirebaseFirestore.instance
-                                            .collection('flocks')
-                                            .doc(data['uniqueFlockName'])
-                                            .set({
-                                          ...data,
-                                          "createdAt":
-                                              FieldValue.serverTimestamp(),
-                                          "createdBy": _currentUser!.uid,
-                                        });
-                                        await FirebaseFirestore.instance
-                                            .collection('requested_flocks')
-                                            .doc(doc.id)
-                                            .delete();
-                                      },
-                                      child: const Text("Approve"),
+                                      CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        minSize: 0,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: CupertinoColors.systemGrey5,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          padding: const EdgeInsets.all(6),
+                                          child: const Icon(
+                                              CupertinoIcons.camera,
+                                              size: 22),
+                                        ),
+                                        onPressed: _uploadProfileImage,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _username.isNotEmpty
+                                        ? _username
+                                        : 'No username set',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w600,
+                                      color: CupertinoColors.black,
                                     ),
                                   ),
-                                );
-                              }).toList(),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  // Sign Out button at the bottom
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 32.0),
-                    child: Center(
-                      child: ElevatedButton(
-                        onPressed: () => authService.signOut(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 24),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text("Sign Out",
-                            style: TextStyle(fontSize: 16)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _email,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: CupertinoColors.systemGrey,
+                                    ),
+                                  ),
+                                  CupertinoButton(
+                                    padding: EdgeInsets.zero,
+                                    child: const Text('Delete Account',
+                                        style: TextStyle(
+                                            color: CupertinoColors.systemRed)),
+                                    onPressed: () {
+                                      showCupertinoModalPopup(
+                                        context: context,
+                                        builder: (context) =>
+                                            CupertinoActionSheet(
+                                          title: const Text('Delete Account'),
+                                          message: const Text(
+                                              'Are you sure you want to delete your account?'),
+                                          actions: [
+                                            CupertinoActionSheetAction(
+                                              isDestructiveAction: true,
+                                              onPressed: () async {
+                                                if (_currentUser != null) {
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('users')
+                                                      .doc(_currentUser!.uid)
+                                                      .delete();
+                                                  await _currentUser!.delete();
+                                                  if (context.mounted) {
+                                                    Navigator.of(context).pop();
+                                                    authService
+                                                        .signOut(context);
+                                                  }
+                                                }
+                                              },
+                                              child:
+                                                  const Text('Confirm Delete'),
+                                            ),
+                                          ],
+                                          cancelButton:
+                                              CupertinoActionSheetAction(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            child: const Text('Cancel'),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Username change section
+                          Neumorphic(
+                            style: NeumorphicStyle(
+                              depth: 10,
+                              intensity: 0.9,
+                              surfaceIntensity: 0.1,
+                              shape: NeumorphicShape.concave,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              color: const Color(0xFFFFFFFF),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Change Username",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CupertinoTextField(
+                                    controller: _usernameController,
+                                    placeholder: "Enter new username",
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 16),
+                                    suffix: CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      minSize: 0,
+                                      child: const Icon(
+                                          CupertinoIcons
+                                              .check_mark_circled_solid,
+                                          color: CupertinoColors.activeGreen),
+                                      onPressed: _updateUsername,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Notifications section
+                          Neumorphic(
+                            style: NeumorphicStyle(
+                              depth: 10,
+                              intensity: 0.9,
+                              surfaceIntensity: 0.1,
+                              shape: NeumorphicShape.concave,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              color: const Color(0xFFFFFFFF),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text("Notifications",
+                                      style: TextStyle(fontSize: 16)),
+                                  IconButton(
+                                    icon: Icon(
+                                      _notificationsEnabled
+                                          ? CupertinoIcons.bell_solid
+                                          : CupertinoIcons.bell_slash,
+                                      color: _notificationsEnabled
+                                          ? const Color(0xFFFFCC00)
+                                          : CupertinoColors.systemGrey,
+                                    ),
+                                    tooltip: _notificationsEnabled
+                                        ? 'Disable Notifications'
+                                        : 'Enable Notifications',
+                                    onPressed: () async {
+                                      final newValue = !_notificationsEnabled;
+                                      setState(() =>
+                                          _notificationsEnabled = newValue);
+                                      await _updateNotificationsEnabled(
+                                          newValue);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Admin-only section for requested flocks
+                          if (_isAdmin)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Requested Flocks",
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('requested_flocks')
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) {
+                                        return const CupertinoActivityIndicator();
+                                      }
+                                      final requests = snapshot.data!.docs;
+                                      if (requests.isEmpty) {
+                                        return const Text(
+                                            "No pending requests.");
+                                      }
+                                      return Column(
+                                        children: requests.map((doc) {
+                                          final data = doc.data()
+                                              as Map<String, dynamic>;
+                                          return Card(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12)),
+                                            child: ListTile(
+                                              title: Text(data['flockName']),
+                                              subtitle:
+                                                  Text(data['description']),
+                                              trailing: CupertinoButton.filled(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12),
+                                                child: const Text("Approve"),
+                                                onPressed: () async {
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('flocks')
+                                                      .doc(data[
+                                                          'uniqueFlockName'])
+                                                      .set({
+                                                    ...data,
+                                                    "createdAt": FieldValue
+                                                        .serverTimestamp(),
+                                                    "createdBy":
+                                                        _currentUser!.uid,
+                                                  });
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection(
+                                                          'requested_flocks')
+                                                      .doc(doc.id)
+                                                      .delete();
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 32),
+                          // Sign Out button
+                          CupertinoButton(
+                            color: CupertinoColors.systemRed,
+                            borderRadius: BorderRadius.circular(10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 24),
+                            child: const Text("Sign Out",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: CupertinoColors.white)),
+                            onPressed: () => authService.signOut(context),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
                   ),

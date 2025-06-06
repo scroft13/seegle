@@ -1,8 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:seegle/firebase_options.dart';
+import 'package:seegle/screens/privacy_policy.dart';
 import 'package:seegle/screens/profile_screen.dart';
+import 'package:seegle/screens/user_agreement.dart';
 import 'package:seegle/store/store.dart';
 import 'package:seegle/theme.dart';
 import 'user_provider.dart';
@@ -18,31 +23,31 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await _setupFirebaseMessaging();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
+  await FirebaseMessaging.instance.requestPermission();
   runApp(const Seegle());
 }
 
 Future<void> _setupFirebaseMessaging() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  // Request permissions
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     debugPrint("Received a foreground message: ${message.notification?.title}");
   });
+}
 
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    debugPrint("User granted permission: ${settings.authorizationStatus}");
-  } else {
-    debugPrint("User declined notifications");
+Future<void> saveDevicePushToken() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final token = await FirebaseMessaging.instance.getToken();
+  if (token != null) {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .set({'pushToken': token}, SetOptions(merge: true));
   }
 }
 
@@ -80,6 +85,8 @@ class Seegle extends StatelessWidget {
                 shouldShowScaffold: true,
               ),
           '/profile': (context) => const ProfilePage(),
+          '/privacy': (context) => const PrivacyPolicyPage(),
+          '/user-agreement': (context) => const UserAgreementPage(),
         },
       ),
     );

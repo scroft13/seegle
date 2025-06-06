@@ -289,13 +289,14 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
 
       final Map<String, dynamic> squawkData = {
         "title": title,
-        "createdBy": firebaseUser.uid,
+        "userId": firebaseUser.uid,
         "username": username,
         "createdAt": now,
         "message": squawkText,
-        "mediaType": mediaType ?? "image", // Add video support
+        "mediaType": mediaType ?? "image",
         "comments": [],
-        "mediaUrls": _mediaUrls // Store media URLs (images or video)
+        "mediaUrls": _mediaUrls,
+        "flockId": flockId,
       };
 
       if (link.isNotEmpty) {

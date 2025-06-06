@@ -227,7 +227,7 @@ class UsernameRegistrationScreenState
                       children: [
                         SizedBox(
                           child: Text(
-                            'Are you at least 13 years old and do you agree to what our team (not legally a team) of legal advisers has told us you have to agree to in order to use the app? TLDR; Don\'t be a dick, don\'t show your dick.',
+                            'Are you at least 13 years old and do you agree to what our team (not legally a team) of legal advisers has told us you have to agree to in order to use the app?',
                             style: TextStyle(
                               fontSize: 14,
                             ),

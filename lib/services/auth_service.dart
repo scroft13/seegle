@@ -8,6 +8,7 @@ import 'package:seegle/models/user_model.dart';
 import 'package:seegle/screens/username_registration_screen.dart';
 import 'package:seegle/user_provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:seegle/main.dart' show saveDevicePushToken;
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -55,6 +56,21 @@ class AuthService {
 
   Future<void> postSignInProcess(User? user, context) async {
     if (user != null) {
+      final settingsRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('notification_settings')
+          .doc('profile');
+
+      final settingsDoc = await settingsRef.get();
+
+      if (!settingsDoc.exists) {
+        await settingsRef.set({
+          'notificationsEnabled': true,
+          'defaultFlockNotifications': true,
+        });
+      }
+
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
 
       if (!userDoc.exists || userDoc.data()!['username'] == null) {
@@ -72,6 +88,7 @@ class AuthService {
       } else {
         Provider.of<UserProvider>(context, listen: false).clearUser();
         Provider.of<UserProvider>(context, listen: false).setUser(user.uid);
+        await saveDevicePushToken();
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomeWrapper(),
@@ -98,8 +115,15 @@ class AuthService {
       'photoUrl': user.photoUrl,
       'uid': user.uid,
       'isBanned': false,
-      'isAdmin': false
+      'isAdmin': false,
     }, SetOptions(merge: true));
+    // Initialize empty notification overrides for flocks
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('notification_settings')
+        .doc('flocks')
+        .set({});
   }
 
   Future<void> signOut(context) async {

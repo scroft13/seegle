@@ -7,50 +7,70 @@ import 'package:seegle/styles.dart';
 import 'package:seegle/screens/video_player_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:seegle/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:metadata_fetch/metadata_fetch.dart';
+import 'package:giphy_get/giphy_get.dart';
 
-class SquawkModal extends StatelessWidget {
+class SquawkModal extends StatefulWidget {
   final Map<String, dynamic> squawk;
-
   const SquawkModal({super.key, required this.squawk});
 
   @override
+  State<SquawkModal> createState() => _SquawkModalState();
+}
+
+class _SquawkModalState extends State<SquawkModal> {
+  final TextEditingController commentController = TextEditingController();
+  String? selectedGifUrl;
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
+  }
+
+  void submitComment() async {
+    final commentText = commentController.text.trim();
+    if (commentText.isEmpty && selectedGifUrl == null) return;
+    print('Submitting comment with GIF URL: ' + (selectedGifUrl ?? 'null'));
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final String username = userProvider.user?.username ?? 'Unknown';
+    final newComment = {
+      'userId': currentUser?.uid ?? '',
+      'username': username,
+      'message': commentText,
+      'gifUrl': selectedGifUrl,
+      'createdAt': Timestamp.now(),
+    };
+
+    await FirebaseFirestore.instance
+        .collection('squawks')
+        .doc((widget.squawk['docRef'] as DocumentReference).id)
+        .collection('comments')
+        .add(newComment);
+
+    commentController.clear();
+    setState(() {
+      selectedGifUrl = null;
+    });
+    if (context.mounted) FocusScope.of(context).unfocus();
+  }
+
+  final pageController = PageController();
+  final currentPageNotifier = ValueNotifier<int>(0);
+
+  @override
   Widget build(BuildContext context) {
-    final commentController = TextEditingController();
-
-    void submitComment() async {
-      final commentText = commentController.text.trim();
-      if (commentText.isEmpty) return;
-
-      final currentUser = FirebaseAuth.instance.currentUser;
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final String username = userProvider.user?.username ?? 'Unknown';
-      final newComment = {
-        'userId': currentUser?.uid ?? '',
-        'username': username,
-        'message': commentText,
-        'createdAt': Timestamp.now(),
-      };
-
-      await FirebaseFirestore.instance
-          .collection('squawks')
-          .doc((squawk['docRef'] as DocumentReference).id)
-          .collection('comments')
-          .add(newComment);
-
-      commentController.clear();
-    }
-
-    final pageController = PageController();
-    final currentPageNotifier = ValueNotifier<int>(0);
-
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
       minChildSize: 0.4,
       maxChildSize: 0.9,
       expand: false,
-      builder: (context, scrollController) {
+      builder: (context, sheetScrollController) {
         return SingleChildScrollView(
-          controller: scrollController,
+          controller: sheetScrollController,
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +79,7 @@ class SquawkModal extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      squawk['title'] ?? 'Untitled Squawk',
+                      widget.squawk['title'] ?? 'Untitled Squawk',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -72,16 +92,16 @@ class SquawkModal extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("By ${squawk['username'] ?? 'Unknown User'}",
+                  Text("By ${widget.squawk['username'] ?? 'Unknown User'}",
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.mediumGrey,
                       )),
                   Text(
-                    squawk['createdAt'] != null
-                        ? DateFormat('hh:mm MMM d, y')
-                            .format((squawk['createdAt'] as Timestamp).toDate())
+                    widget.squawk['createdAt'] != null
+                        ? DateFormat('hh:mm MMM d, y').format(
+                            (widget.squawk['createdAt'] as Timestamp).toDate())
                         : "Unknown date",
                     style: const TextStyle(
                       fontSize: 12,
@@ -91,23 +111,23 @@ class SquawkModal extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              if (squawk['mediaUrls'] != null &&
-                  squawk['mediaUrls'] is List &&
-                  (squawk['mediaUrls'] as List).isNotEmpty)
+              if (widget.squawk['mediaUrls'] != null &&
+                  widget.squawk['mediaUrls'] is List &&
+                  (widget.squawk['mediaUrls'] as List).isNotEmpty)
                 Column(
                   children: [
                     SizedBox(
                       height: 300,
                       child: PageView.builder(
                         controller: pageController,
-                        itemCount: (squawk['mediaUrls'] as List).length,
+                        itemCount: (widget.squawk['mediaUrls'] as List).length,
                         onPageChanged: (index) =>
                             currentPageNotifier.value = index,
                         itemBuilder: (context, index) {
-                          final mediaUrl = squawk['mediaUrls'][index];
+                          final mediaUrl = widget.squawk['mediaUrls'][index];
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: squawk['mediaType'] == 'video'
+                            child: widget.squawk['mediaType'] == 'video'
                                 ? VideoPlayerScreen(videoUrl: mediaUrl)
                                 : GestureDetector(
                                     onTap: () {
@@ -168,7 +188,7 @@ class SquawkModal extends StatelessWidget {
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
-                            (squawk['mediaUrls'] as List).length,
+                            (widget.squawk['mediaUrls'] as List).length,
                             (index) => Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               width: currentPage == index ? 10 : 8,
@@ -187,26 +207,206 @@ class SquawkModal extends StatelessWidget {
                   ],
                 ),
               const SizedBox(height: 12),
-              Text(squawk['message'] ?? '',
+              Text(widget.squawk['message'] ?? '',
                   style: const TextStyle(fontSize: 16)),
+              if (widget.squawk['link'] != null &&
+                  widget.squawk['link'].toString().isNotEmpty)
+                FutureBuilder<Metadata?>(
+                  future: MetadataFetch.extract(widget.squawk['link']),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return InkWell(
+                        onTap: () async {
+                          final url = Uri.parse(widget.squawk['link']);
+                          try {
+                            if (!await launchUrl(url,
+                                mode: LaunchMode.externalApplication)) {
+                              debugPrint(
+                                  "Failed to launch $url. Try opening manually.");
+                            }
+                          } catch (e) {
+                            debugPrint("Exception trying to launch $url: $e");
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 12.0),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.mediumGrey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.link, color: Colors.blue),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  widget.squawk['link'],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    final metadata = snapshot.data!;
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          final url = Uri.parse(widget.squawk['link']);
+                          try {
+                            final launched = await launchUrl(url,
+                                mode: LaunchMode.externalApplication);
+                            if (!launched) {
+                              debugPrint(
+                                  "Failed to launch $url: no handler found.");
+                            }
+                          } catch (e) {
+                            debugPrint("Exception trying to launch $url: $e");
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 12.0),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.mediumGrey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (metadata.image != null)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Image.network(metadata.image!,
+                                      height: 150,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover),
+                                ),
+                              const SizedBox(height: 8),
+                              if (metadata.title != null)
+                                Text(metadata.title!,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
+                              if (metadata.description != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Text(metadata.description!),
+                                ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  widget.squawk['link'],
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 12),
               const Text("Comments",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               StatefulBuilder(
                 builder: (context, setState) {
-                  return TextField(
-                    controller: commentController,
-                    minLines: 1,
-                    maxLines: 6,
-                    onSubmitted: (_) => submitComment(),
-                    decoration: InputDecoration(
-                      labelText: "Add a comment...",
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: submitComment,
-                      ),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border:
+                          Border.all(color: AppColors.mediumGrey, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (selectedGifUrl != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(selectedGifUrl!),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close),
+                                    color: Colors.black54,
+                                    onPressed: () =>
+                                        setState(() => selectedGifUrl = null),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                              top: selectedGifUrl != null ? 8.0 : 0.0,
+                              bottom: MediaQuery.of(context).viewInsets.bottom),
+                          child: TextField(
+                            controller: commentController,
+                            minLines: 1,
+                            maxLines: 6,
+                            onSubmitted: (_) => submitComment(),
+                            decoration: InputDecoration(
+                              labelText: "Add a comment...",
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.gif_box),
+                                    onPressed: () async {
+                                      final gif = await GiphyGet.getGif(
+                                        context: context,
+                                        apiKey:
+                                            'mZK2j4R0Lh7DbtB6cufdZ1UG9oqGsikr',
+                                        lang: GiphyLanguage.english,
+                                      );
+                                      print('GiphyGet.getGif returned: ' +
+                                          gif.toString());
+                                      if (gif != null) {
+                                        final url = gif.images?.original?.url ??
+                                            gif.images?.fixedHeight?.url ??
+                                            gif.images?.downsized?.url;
+                                        print('Selected GIF URL: ' +
+                                            (url ?? 'null'));
+                                        setState(() {
+                                          selectedGifUrl = url;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.send),
+                                    onPressed: submitComment,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -214,7 +414,7 @@ class SquawkModal extends StatelessWidget {
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('squawks')
-                    .doc((squawk['docRef'] as DocumentReference).id)
+                    .doc((widget.squawk['docRef'] as DocumentReference).id)
                     .collection('comments')
                     .orderBy('createdAt', descending: true)
                     .snapshots(),
@@ -341,9 +541,37 @@ class SquawkModal extends StatelessWidget {
                             ),
                           ],
                         ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(comment['message'] ?? ''),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if ((comment['message'] ?? '').isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(comment['message']),
+                              ),
+                            if (comment['gifUrl'] != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    comment['gifUrl'],
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: Center(
+                                            child: CircularProgressIndicator()),
+                                      );
+                                    },
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.broken_image),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       );
                     }).toList(),

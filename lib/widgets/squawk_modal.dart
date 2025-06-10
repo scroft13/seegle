@@ -11,6 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:metadata_fetch/metadata_fetch.dart';
 import 'package:giphy_get/giphy_get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 class SquawkModal extends StatefulWidget {
   final Map<String, dynamic> squawk;
@@ -60,6 +62,295 @@ class _SquawkModalState extends State<SquawkModal> {
 
   final pageController = PageController();
   final currentPageNotifier = ValueNotifier<int>(0);
+
+  Future<VideoPlayerController> _createVideoController(String videoUrl) async {
+    final videoPlayerController = VideoPlayerController.network(videoUrl);
+    await videoPlayerController.initialize();
+    return videoPlayerController;
+  }
+
+  Future<ChewieController> _createChewiePlayer(String videoUrl) async {
+    final videoPlayerController = await _createVideoController(videoUrl);
+    return ChewieController(
+      videoPlayerController: videoPlayerController,
+      autoPlay: false,
+      looping: false,
+    );
+  }
+
+  Widget _buildMediaDisplay() {
+    final mediaUrls = widget.squawk['mediaUrls'] as List;
+
+    // Handle both old and new data structures
+    List<String> mediaTypes = [];
+    if (widget.squawk['mediaTypes'] != null &&
+        widget.squawk['mediaTypes'] is List) {
+      // New structure with mediaTypes array
+      mediaTypes = (widget.squawk['mediaTypes'] as List).cast<String>();
+    } else if (widget.squawk['mediaType'] != null) {
+      // Old structure with single mediaType string
+      mediaTypes = [widget.squawk['mediaType'] as String];
+    } else {
+      // Fallback - determine type from URL
+      mediaTypes = mediaUrls
+          .map((url) => (url.toString().contains('.mp4') ||
+                  url.toString().contains('.mov'))
+              ? 'video'
+              : 'image')
+          .toList();
+    }
+
+    if (mediaUrls.length == 1) {
+      // Single media item
+      return _buildSingleMedia(
+          mediaUrls[0], mediaTypes.isNotEmpty ? mediaTypes[0] : 'unknown');
+    } else {
+      // Multiple media items - show as carousel
+      return _buildMediaCarousel(mediaUrls, mediaTypes);
+    }
+  }
+
+  Widget _buildSingleMedia(String mediaUrl, String mediaType) {
+    if (mediaType == 'video' ||
+        mediaUrl.contains('.mp4') ||
+        mediaUrl.contains('.mov')) {
+      return _buildVideoPlayer(mediaUrl);
+    } else {
+      return _buildImageDisplay(mediaUrl);
+    }
+  }
+
+  Widget _buildVideoPlayer(String videoUrl) {
+    return FutureBuilder<VideoPlayerController>(
+      future: _createVideoController(videoUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          final controller = snapshot.data!;
+
+          // Auto-play the video
+          if (!controller.value.isPlaying) {
+            controller.play();
+          }
+
+          return GestureDetector(
+            onTap: () {
+              // Toggle play/pause on tap
+              if (controller.value.isPlaying) {
+                controller.pause();
+              } else {
+                controller.play();
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              child: AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    VideoPlayer(controller),
+                    // Play/pause overlay
+                    if (!controller.value.isPlaying)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.play_arrow,
+                              color: Colors.white, size: 40),
+                          onPressed: () => controller.play(),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        return Container(
+          height: 200,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
+
+  Widget _buildImageDisplay(String imageUrl) {
+    return Container(
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            height: 200,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+          errorWidget: (context, url, error) => Container(
+            height: 200,
+            child: const Center(child: Icon(Icons.error)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaCarousel(List mediaUrls, List<String> mediaTypes) {
+    // Calculate optimal height based on content types
+    bool hasVideo = mediaTypes.any((type) =>
+        type == 'video' ||
+        mediaUrls.any((url) =>
+            url.toString().contains('.mp4') ||
+            url.toString().contains('.mov')));
+
+    // Use larger height if videos are present
+    double carouselHeight = hasVideo ? 500 : 350;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: carouselHeight,
+          child: PageView.builder(
+            controller: pageController,
+            onPageChanged: (index) => currentPageNotifier.value = index,
+            itemCount: mediaUrls.length,
+            itemBuilder: (context, index) {
+              final mediaUrl = mediaUrls[index];
+              final mediaType =
+                  index < mediaTypes.length ? mediaTypes[index] : 'unknown';
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: _buildSingleMediaForCarousel(mediaUrl, mediaType),
+              );
+            },
+          ),
+        ),
+        // Page indicator
+        if (mediaUrls.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: ValueListenableBuilder<int>(
+              valueListenable: currentPageNotifier,
+              builder: (context, currentPage, _) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    mediaUrls.length,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: currentPage == index
+                            ? Colors.blue
+                            : AppColors.mediumGrey,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSingleMediaForCarousel(String mediaUrl, String mediaType) {
+    if (mediaType == 'video' ||
+        mediaUrl.contains('.mp4') ||
+        mediaUrl.contains('.mov')) {
+      return _buildVideoPlayerForCarousel(mediaUrl);
+    } else {
+      return _buildImageDisplayForCarousel(mediaUrl);
+    }
+  }
+
+  Widget _buildVideoPlayerForCarousel(String videoUrl) {
+    return FutureBuilder<VideoPlayerController>(
+      future: _createVideoController(videoUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          final controller = snapshot.data!;
+
+          // Auto-play the video
+          if (!controller.value.isPlaying) {
+            controller.play();
+          }
+
+          return GestureDetector(
+            onTap: () {
+              // Toggle play/pause on tap
+              if (controller.value.isPlaying) {
+                controller.pause();
+              } else {
+                controller.play();
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: controller.value.size.width,
+                  height: controller.value.size.height,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      VideoPlayer(controller),
+                      // Play/pause overlay
+                      if (!controller.value.isPlaying)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.play_arrow,
+                                color: Colors.white, size: 40),
+                            onPressed: () => controller.play(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        return Container(
+          height: 200,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
+
+  Widget _buildImageDisplayForCarousel(String imageUrl) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit
+              .contain, // Changed from cover to contain to prevent cropping
+          placeholder: (context, url) => Container(
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+          errorWidget: (context, url, error) => Container(
+            child: const Center(child: Icon(Icons.error)),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,104 +402,18 @@ class _SquawkModalState extends State<SquawkModal> {
                 ],
               ),
               const SizedBox(height: 12),
+              Text(widget.squawk['message'] ?? '',
+                  style: const TextStyle(fontSize: 16)),
+
+              // Media display section
               if (widget.squawk['mediaUrls'] != null &&
                   widget.squawk['mediaUrls'] is List &&
                   (widget.squawk['mediaUrls'] as List).isNotEmpty)
-                Column(
-                  children: [
-                    SizedBox(
-                      height: 300,
-                      child: PageView.builder(
-                        controller: pageController,
-                        itemCount: (widget.squawk['mediaUrls'] as List).length,
-                        onPageChanged: (index) =>
-                            currentPageNotifier.value = index,
-                        itemBuilder: (context, index) {
-                          final mediaUrl = widget.squawk['mediaUrls'][index];
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: widget.squawk['mediaType'] == 'video'
-                                ? VideoPlayerScreen(videoUrl: mediaUrl)
-                                : GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => Scaffold(
-                                            backgroundColor: Colors.black,
-                                            appBar: AppBar(
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                            ),
-                                            body: Center(
-                                              child: InteractiveViewer(
-                                                child: CachedNetworkImage(
-                                                  imageUrl: mediaUrl,
-                                                  fit: BoxFit.contain,
-                                                  placeholder: (context, url) =>
-                                                      const Center(
-                                                          child:
-                                                              CircularProgressIndicator()),
-                                                  errorWidget: (context, url,
-                                                          error) =>
-                                                      const Icon(
-                                                          Icons.broken_image,
-                                                          size: 100,
-                                                          color: AppColors
-                                                              .mediumGrey),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: CachedNetworkImage(
-                                      imageUrl: mediaUrl,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      placeholder: (context, url) =>
-                                          const Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.broken_image,
-                                              size: 100,
-                                              color: AppColors.mediumGrey),
-                                    ),
-                                  ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ValueListenableBuilder<int>(
-                      valueListenable: currentPageNotifier,
-                      builder: (context, currentPage, _) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            (widget.squawk['mediaUrls'] as List).length,
-                            (index) => Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: currentPage == index ? 10 : 8,
-                              height: currentPage == index ? 10 : 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: currentPage == index
-                                    ? AppColors.primaryColor
-                                    : Colors.grey.shade400,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: _buildMediaDisplay(),
                 ),
-              const SizedBox(height: 12),
-              Text(widget.squawk['message'] ?? '',
-                  style: const TextStyle(fontSize: 16)),
+
               if (widget.squawk['link'] != null &&
                   widget.squawk['link'].toString().isNotEmpty)
                 FutureBuilder<Metadata?>(

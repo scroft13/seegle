@@ -42,26 +42,16 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Stack(children: [
-                  Column(
-                    children: [
-                      SizedBox(
-                        height: 80,
-                      ),
-                      AspectRatio(
-                        aspectRatio: _controller
-                            .value.aspectRatio, // Maintain natural aspect ratio
-                        child: VideoPlayer(_controller),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * .45,
-                  )
-                ]),
+                AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
                 if (!_isPlaying)
-                  const Icon(Icons.play_circle_fill,
-                      size: 50, color: Colors.white),
+                  const Icon(
+                    Icons.play_circle_fill,
+                    size: 50,
+                    color: Colors.white,
+                  ),
               ],
             ),
           )

@@ -38,7 +38,8 @@ dependencies:
   google_fonts: ^6.2.1
   camera: ^0.11.0
   path_provider: ^2.0.11
-  video_player: ^2.2.11
+  video_player: ^2.10.0
+  video_player_android: ^2.8.7
   firebase_storage: ^12.4.4
   flutter_riverpod: ^2.6.1
   image_picker: ^1.1.2
@@ -51,6 +52,7 @@ dependencies:
   firebase_ai: ^2.0.0
   firebase_app_check: ^0.3.2+6
   flutter_dotenv: ^5.2.1
+  chewie: ^1.11.3
 
 dev_dependencies:
   flutter_test:

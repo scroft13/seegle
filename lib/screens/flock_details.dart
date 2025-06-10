@@ -347,36 +347,61 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
     );
   }
 
-  Widget _buildMediaPreview(List<String> mediaUrls, {String? mediaType}) {
+  Widget _buildMediaPreview(List<String> mediaUrls,
+      {String? mediaType, List<String>? mediaTypes}) {
     if (mediaUrls.isEmpty) return SizedBox.shrink();
 
-    if (mediaType == 'video') {
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.black,
-            ),
-            child: Image.network(
-              '${mediaUrls.first}?thumbnail=true',
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Center(child: CircularProgressIndicator());
-              },
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.videocam,
-                size: 100,
-                color: AppColors.mediumGrey,
+    // Check if this is a video (support both old mediaType and new mediaTypes)
+    bool isVideo = false;
+    if (mediaTypes != null && mediaTypes.isNotEmpty) {
+      isVideo = mediaTypes.first == 'video';
+    } else if (mediaType != null) {
+      isVideo = mediaType == 'video';
+    }
+
+    if (isVideo) {
+      return Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.black,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[300],
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.videocam,
+                      size: 60,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Video',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const Icon(Icons.play_circle_fill, size: 50, color: Colors.white),
-        ],
+            const Icon(Icons.play_circle_fill, size: 50, color: Colors.white),
+          ],
+        ),
       );
     }
 
@@ -770,6 +795,12 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
                                                           []),
                                                   mediaType:
                                                       squawk['mediaType'],
+                                                  mediaTypes: squawk[
+                                                              'mediaTypes'] !=
+                                                          null
+                                                      ? List<String>.from(
+                                                          squawk['mediaTypes'])
+                                                      : null,
                                                 ),
                                               Text(
                                                 squawk['message'] ?? '',

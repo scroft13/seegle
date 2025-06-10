@@ -3,7 +3,7 @@ description: "Seegle is a dynamic and engaging platform designed to bring people
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 0.0.1
 
 environment:
   sdk: ">=3.3.3 <4.0.0"
@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.6
-  firebase_core: ^3.12.1
+  firebase_core: ^3.13.1
   firebase_auth: ^5.5.1
   google_sign_in: ^6.2.1
   sign_in_with_apple: ^7.0.1
@@ -48,6 +48,9 @@ dependencies:
   giphy_get:
     path: giphy_get
   flutter_neumorphic_plus: ^3.4.0
+  firebase_ai: ^2.0.0
+  firebase_app_check: ^0.3.2+6
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -101,6 +104,7 @@ flutter:
     - assets/icons/globe_gull.svg
     - assets/icons/shield_gull.svg
     - assets/fonts/testfile.txt
+    - .env
 
   fonts:
     - family: Nexa

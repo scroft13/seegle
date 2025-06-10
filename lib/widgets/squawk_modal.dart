@@ -10,6 +10,7 @@ import 'package:seegle/user_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:metadata_fetch/metadata_fetch.dart';
 import 'package:giphy_get/giphy_get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SquawkModal extends StatefulWidget {
   final Map<String, dynamic> squawk;
@@ -32,7 +33,6 @@ class _SquawkModalState extends State<SquawkModal> {
   void submitComment() async {
     final commentText = commentController.text.trim();
     if (commentText.isEmpty && selectedGifUrl == null) return;
-    print('Submitting comment with GIF URL: ' + (selectedGifUrl ?? 'null'));
 
     final currentUser = FirebaseAuth.instance.currentUser;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -55,7 +55,7 @@ class _SquawkModalState extends State<SquawkModal> {
     setState(() {
       selectedGifUrl = null;
     });
-    if (context.mounted) FocusScope.of(context).unfocus();
+    if (mounted) FocusScope.of(context).unfocus();
   }
 
   final pageController = PageController();
@@ -380,17 +380,13 @@ class _SquawkModalState extends State<SquawkModal> {
                                       final gif = await GiphyGet.getGif(
                                         context: context,
                                         apiKey:
-                                            'mZK2j4R0Lh7DbtB6cufdZ1UG9oqGsikr',
+                                            dotenv.env['GIPHY_API_KEY'] ?? '',
                                         lang: GiphyLanguage.english,
                                       );
-                                      print('GiphyGet.getGif returned: ' +
-                                          gif.toString());
                                       if (gif != null) {
                                         final url = gif.images?.original?.url ??
                                             gif.images?.fixedHeight?.url ??
                                             gif.images?.downsized?.url;
-                                        print('Selected GIF URL: ' +
-                                            (url ?? 'null'));
                                         setState(() {
                                           selectedGifUrl = url;
                                         });

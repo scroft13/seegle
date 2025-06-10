@@ -1,0 +1,2 @@
+/Users/hal/seegle/android/app/.cxx/RelWithDebInfo/705q213f/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/hal/seegle/android/app/.cxx/RelWithDebInfo/705q213f/armeabi-v7a/CMakeFiles/rebuild_cache.dir

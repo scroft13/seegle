@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:seegle/store/store.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_ai/firebase_ai.dart';
 
 class NewSquawkButton extends StatefulWidget {
   const NewSquawkButton({super.key});
@@ -23,9 +22,8 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
   final TextEditingController _linkController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final List<String> _mediaUrls = []; // Stores multiple media URLs
+  String? _mediaUrl;
   bool uploading = false;
-  String? mediaType;
 
   void _openBottomSheet() {
     showModalBottomSheet(
@@ -61,7 +59,7 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
               TextField(
                 controller: _squawkController,
                 decoration: const InputDecoration(
-                  labelText: "Message (Optional)",
+                  labelText: "Message (Required)",
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -75,80 +73,31 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: uploading ? null : _captureAndStoreMedia,
-                      icon: _mediaUrls.isNotEmpty
-                          ? const Icon(Icons.check, color: Colors.green)
-                          : const Icon(Icons.camera_alt),
-                      label: Text(
-                          _mediaUrls.isNotEmpty ? "Uploaded" : "Add Photo"),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: uploading ? null : _captureVideoAndStore,
-                      icon: const Icon(Icons.videocam),
-                      label: const Text("Add Video"),
-                    ),
-                  ),
-                ],
+              ElevatedButton.icon(
+                onPressed: uploading ? null : _pickAndStoreMedia,
+                icon: uploading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : (_mediaUrl != null
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : const Icon(Icons.camera_alt)),
+                label: Text(uploading
+                    ? "Uploading..."
+                    : (_mediaUrl != null ? "Uploaded" : "Add Photo or Video")),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: uploading
-                    ? null
-                    : () async {
-                        setState(() {
-                          uploading = true;
-                        });
-                        await _addSquawk();
-                        final aiReply = await _generateSquawk();
-                        if (aiReply != null && aiReply.trim().isNotEmpty) {
-                          final String flockId =
-                              Provider.of<AppStore>(context, listen: false)
-                                  .flockId;
-                          await FirebaseFirestore.instance
-                              .collection('squawks')
-                              .add({
-                            "title": "AI Reply",
-                            "userId": "ai-bot",
-                            "username": "Seegle AI",
-                            "createdAt": DateTime.now(),
-                            "message": aiReply.trim(),
-                            "mediaType": "text",
-                            "comments": [],
-                            "mediaUrls": [],
-                            "flockId": flockId,
-                          });
-                        }
-                        setState(() {
-                          uploading = false;
-                        });
-                      },
+                onPressed: _addSquawk,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 45),
                 ),
-                child: uploading
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text("Uploading...")
-                        ],
-                      )
-                    : const Text("Post Squawk"),
+                child: const Text("Post Squawk"),
               ),
               const SizedBox(height: 10),
             ],
@@ -158,38 +107,46 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
     );
   }
 
-  Future<void> _captureAndStoreMedia() async {
+  Future<void> _pickAndStoreMedia() async {
     final User? user = _auth.currentUser;
     final status = await Permission.camera.request();
 
     if (status.isGranted) {
       final ImagePicker picker = ImagePicker();
-      bool captureMore = true;
+      final String? choice = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Select Media Type"),
+            content:
+                const Text("Would you like to take a photo or record a video?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, "photo"),
+                child: const Text("Take Photo"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, "video"),
+                child: const Text("Record Video"),
+              ),
+            ],
+          );
+        },
+      );
 
-      setState(() {
-        uploading = true;
-      });
+      if (choice == null) {
+        debugPrint("User canceled media selection");
+        return;
+      }
 
-      while (captureMore) {
-        XFile? mediaFile = await picker.pickImage(source: ImageSource.camera);
+      XFile? mediaFile;
+      if (choice == "photo") {
+        mediaFile = await picker.pickImage(source: ImageSource.camera);
+      } else if (choice == "video") {
+        mediaFile = await picker.pickVideo(source: ImageSource.camera);
+      }
 
-        // Pick video if image is not selected
-        if (mediaFile == null) {
-          mediaFile = await picker.pickVideo(source: ImageSource.camera);
-          setState(() {
-            mediaType = 'video';
-          });
-        } else {
-          setState(() {
-            mediaType = 'image';
-          });
-        }
-
-        if (mediaFile == null) {
-          debugPrint("User canceled media capture");
-          break; // Stop loop when user cancels
-        }
-
+      if (mediaFile != null) {
         File file = File(mediaFile.path);
         String fileName = DateTime.now().millisecondsSinceEpoch.toString();
         Reference storageRef = FirebaseStorage.instance
@@ -197,110 +154,38 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
             .child("uploads/${user?.uid}/$fileName");
 
         try {
+          setState(() {
+            uploading = true;
+          });
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {});
+          });
           UploadTask uploadTask = storageRef.putFile(file);
           TaskSnapshot snapshot = await uploadTask;
           String downloadUrl = await snapshot.ref.getDownloadURL();
-          _mediaUrls.add(downloadUrl); // Store each uploaded URL
 
-          // Ask user if they want to take another photo or video
-          captureMore = await _askToCaptureMore();
+          setState(() {
+            _mediaUrl = downloadUrl;
+            uploading = false;
+          });
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {});
+          });
+          debugPrint("Media uploaded: $_mediaUrl");
         } catch (e) {
           debugPrint("Upload failed: $e");
-          break;
+          setState(() {
+            uploading = false;
+          });
         }
+      } else {
+        debugPrint("No media captured");
       }
-
-      setState(() {
-        uploading = false;
-      });
-
-      debugPrint("Media uploaded: $_mediaUrls");
     } else {
       debugPrint("Camera permission denied");
     }
-  }
-
-  Future<void> _captureVideoAndStore() async {
-    final User? user = _auth.currentUser;
-    final status = await Permission.camera.request();
-
-    if (status.isGranted) {
-      final ImagePicker picker = ImagePicker();
-
-      setState(() {
-        uploading = true;
-      });
-
-      final XFile? videoFile =
-          await picker.pickVideo(source: ImageSource.camera);
-      if (videoFile == null) {
-        debugPrint("User canceled video capture");
-        setState(() {
-          uploading = false;
-        });
-        return;
-      }
-
-      File file = File(videoFile.path);
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference storageRef = FirebaseStorage.instance
-          .ref()
-          .child("uploads/${user?.uid}/$fileName");
-
-      try {
-        UploadTask uploadTask = storageRef.putFile(file);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        _mediaUrls.add(downloadUrl);
-        mediaType = 'video';
-      } catch (e) {
-        debugPrint("Video upload failed: $e");
-      }
-
-      setState(() {
-        uploading = false;
-      });
-    } else {
-      debugPrint("Camera permission denied");
-    }
-  }
-
-  Future<bool> _askToCaptureMore() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text("Capture Another Photo?"),
-              content: const Text("Would you like to take another photo?"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("No"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Yes"),
-                ),
-              ],
-            );
-          },
-        ) ??
-        false;
-  }
-
-  Future<String?> _generateSquawk() async {
-    final String title = _titleController.text.trim();
-    final String squawkText = _squawkController.text.trim();
-    final model =
-        FirebaseAI.googleAI().generativeModel(model: 'gemini-2.0-flash');
-
-// Provide a prompt that contains text
-    final prompt = [Content.text("$title $squawkText")];
-
-// To generate text output, call generateContent with the text input
-    final response = await model.generateContent(prompt);
-    print(response.text);
-    return response.text;
   }
 
   Future<void> _addSquawk() async {
@@ -309,13 +194,24 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
     final String link = _linkController.text.trim();
     final User? firebaseUser = _auth.currentUser;
 
-    if (title.isEmpty || firebaseUser == null) {
-      debugPrint("Title and authentication are required");
+    if (title.isEmpty) {
+      debugPrint("Title is required");
+      return;
+    }
+
+    if (squawkText.isEmpty) {
+      debugPrint("Squawk message is required");
+      return;
+    }
+
+    if (firebaseUser == null) {
+      debugPrint("User is not authenticated");
       return;
     }
 
     final String flockId =
         Provider.of<AppStore>(context, listen: false).flockId;
+
     if (flockId.isEmpty) {
       debugPrint("Invalid flockId provided");
       return;
@@ -336,11 +232,8 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
         "title": title,
         "userId": firebaseUser.uid,
         "username": username,
-        "createdAt": now,
+        "createdAt": Timestamp.fromDate(now),
         "message": squawkText,
-        "mediaType": mediaType ?? "image",
-        "comments": [],
-        "mediaUrls": _mediaUrls,
         "flockId": flockId,
       };
 
@@ -348,12 +241,14 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
         squawkData["link"] = link;
       }
 
-      final squawkDoc = await _firestore.collection("squawks").add(squawkData);
-      final String squawkId = squawkDoc.id;
+      if (_mediaUrl != null && _mediaUrl!.isNotEmpty) {
+        squawkData["mediaUrls"] = [_mediaUrl];
+        squawkData["mediaType"] =
+            _mediaUrl!.contains('video') ? 'video' : 'image';
+      }
 
-      await _firestore.collection("flocks").doc(flockId).update({
-        "squawks": FieldValue.arrayUnion([squawkId]),
-      });
+      // Create the squawk as an individual document in the squawks collection
+      await _firestore.collection("squawks").add(squawkData);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -362,7 +257,7 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
       _titleController.clear();
       _squawkController.clear();
       _linkController.clear();
-      _mediaUrls.clear(); // Clear after posting
+      _mediaUrl = null;
     } catch (e) {
       debugPrint("Firestore write error: $e");
     }

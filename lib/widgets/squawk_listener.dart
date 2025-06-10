@@ -72,7 +72,7 @@ class SquawkListWidget extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  formatLocalDateTime(data['timestamp']),
+                                  formatLocalDateTime(data['createdAt']),
                                   style: const TextStyle(
                                     color: Colors.black,
                                     fontSize: 12,

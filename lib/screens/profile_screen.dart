@@ -3,7 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:seegle/services/auth_service.dart';
 import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
@@ -25,7 +24,6 @@ class ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true;
   bool _isAdmin = false;
   bool _notificationsEnabled = true;
-  bool _defaultFlockNotifications = true;
 
   @override
   void initState() {
@@ -62,8 +60,6 @@ class ProfilePageState extends State<ProfilePage> {
       if (settingsDoc.exists) {
         final settings = settingsDoc.data()!;
         _notificationsEnabled = settings['notificationsEnabled'] ?? true;
-        _defaultFlockNotifications =
-            settings['defaultFlockNotifications'] ?? true;
       }
     }
   }
@@ -130,16 +126,6 @@ class ProfilePageState extends State<ProfilePage> {
         .collection('notification_settings')
         .doc('profile')
         .set({'notificationsEnabled': value}, SetOptions(merge: true));
-  }
-
-  Future<void> _updateDefaultFlockNotifications(bool value) async {
-    setState(() => _defaultFlockNotifications = value);
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(_currentUser!.uid)
-        .collection('notification_settings')
-        .doc('profile')
-        .set({'defaultFlockNotifications': value}, SetOptions(merge: true));
   }
 
   Future<void> _updateUsername() async {
@@ -243,6 +229,7 @@ class ProfilePageState extends State<ProfilePage> {
                                       CupertinoButton(
                                         padding: EdgeInsets.zero,
                                         minSize: 0,
+                                        onPressed: _uploadProfileImage,
                                         child: Container(
                                           decoration: BoxDecoration(
                                             color: CupertinoColors.systemGrey5,
@@ -253,7 +240,6 @@ class ProfilePageState extends State<ProfilePage> {
                                               CupertinoIcons.camera,
                                               size: 22),
                                         ),
-                                        onPressed: _uploadProfileImage,
                                       ),
                                     ],
                                   ),
@@ -357,11 +343,11 @@ class ProfilePageState extends State<ProfilePage> {
                                     suffix: CupertinoButton(
                                       padding: EdgeInsets.zero,
                                       minSize: 0,
+                                      onPressed: _updateUsername,
                                       child: const Icon(
                                           CupertinoIcons
                                               .check_mark_circled_solid,
                                           color: CupertinoColors.activeGreen),
-                                      onPressed: _updateUsername,
                                     ),
                                   ),
                                 ],
@@ -412,6 +398,28 @@ class ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
                           ),
+                          if (!_notificationsEnabled)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6.0),
+                              child: Text(
+                                'Notifications are disabled for all flocks.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: CupertinoColors.systemGrey),
+                                textAlign: TextAlign.right,
+                              ),
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(top: 6.0),
+                              child: Text(
+                                'This setting controls all flock notifications.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: CupertinoColors.systemGrey),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
                           const SizedBox(height: 24),
                           // Admin-only section for requested flocks
                           if (_isAdmin)

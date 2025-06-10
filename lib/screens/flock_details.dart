@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -293,6 +292,61 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
     }
   }
 
+  void _showReportDialog(
+      BuildContext context, String reportedUserId, String reportedUsername,
+      {Map<String, dynamic>? squawk}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Report $reportedUsername?'),
+        content: const Text(
+            'Do you want to report this user for inappropriate behavior?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => _reportUser(
+                context, reportedUserId, reportedUsername,
+                squawk: squawk),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _reportUser(context, String reportedUserId, String reportedUsername,
+      {Map<String, dynamic>? squawk}) async {
+    print('now reporting');
+
+    Map<String, dynamic> reportData = {
+      'reportedUserId': reportedUserId,
+      'reportedUsername': reportedUsername,
+      'reportedAt': DateTime.now(),
+      'reporterUserId': _currentUser?.uid,
+      'flockId': widget.flockId,
+      'flockName': flockName,
+    };
+
+    // Add squawk information if available
+    if (squawk != null) {
+      reportData.addAll({
+        'squawkId': squawk['docRef']?.id,
+        'squawkTitle': squawk['title'],
+        'squawkMessage': squawk['message'],
+        'squawkCreatedAt': squawk['createdAt'],
+      });
+    }
+
+    await FirebaseFirestore.instance.collection('reports').add(reportData);
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User reported. Thank you!')),
+    );
+  }
+
   Widget _buildMediaPreview(List<String> mediaUrls, {String? mediaType}) {
     if (mediaUrls.isEmpty) return SizedBox.shrink();
 
@@ -387,21 +441,25 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
                                 if (_hasLoadedNotificationSettings)
                                   IconButton(
                                     icon: Icon(
-                                        _flockNotificationsEnabled
-                                            ? CupertinoIcons.bell_solid
-                                            : CupertinoIcons.bell_slash,
-                                        color: _flockNotificationsEnabled
-                                            ? const Color(0xFFFFCC00)
-                                            : CupertinoColors.systemGrey),
-                                    tooltip: _flockNotificationsEnabled
-                                        ? 'Disable Flock Notifications'
-                                        : 'Enable Flock Notifications',
-                                    onPressed:
-                                        (_hasLoadedNotificationSettings &&
-                                                _globalNotificationsEnabled)
-                                            ? () => _toggleFlockNotification(
-                                                !_flockNotificationsEnabled)
-                                            : null,
+                                      _flockNotificationsEnabled
+                                          ? CupertinoIcons.bell_solid
+                                          : CupertinoIcons.bell_slash,
+                                      color: !_globalNotificationsEnabled
+                                          ? CupertinoColors.systemGrey
+                                          : (_flockNotificationsEnabled
+                                              ? const Color(0xFFFFCC00)
+                                              : CupertinoColors.systemGrey),
+                                    ),
+                                    tooltip: !_globalNotificationsEnabled
+                                        ? 'Enable notifications in your profile to receive flock notifications.'
+                                        : (_flockNotificationsEnabled
+                                            ? 'Disable Flock Notifications'
+                                            : 'Enable Flock Notifications'),
+                                    onPressed: (!_globalNotificationsEnabled ||
+                                            !_hasLoadedNotificationSettings)
+                                        ? null
+                                        : () => _toggleFlockNotification(
+                                            !_flockNotificationsEnabled),
                                   ),
                               ],
                             ),
@@ -468,8 +526,7 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
                             ),
                             if (createdAt != null)
                               Text(
-                                "Created on " +
-                                    DateFormat('MMMM d, y').format(createdAt!),
+                                "Created on ${DateFormat('MMMM d, y').format(createdAt!)}",
                                 style: const TextStyle(
                                     fontSize: 12, color: AppColors.mediumGrey),
                               ),
@@ -526,14 +583,29 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
                                             'Unknown User';
 
                                         return ListTile(
-                                          title: Text(username),
+                                          title: TextButton(
+                                            style: TextButton.styleFrom(
+                                                padding: EdgeInsets.zero,
+                                                minimumSize: Size(0, 0),
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap),
+                                            onLongPress: userId !=
+                                                    _currentUser?.uid
+                                                ? () => _showReportDialog(
+                                                    context, userId, username)
+                                                : null,
+                                            onPressed: null,
+                                            child: Text(
+                                              username,
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.mediumGrey),
+                                            ),
+                                          ),
                                           subtitle: Text(
-                                            "Requested at " +
-                                                DateFormat('MMMM d, y hh:mm a')
-                                                    .format(
-                                                        (userInfo['requestedAt']
-                                                                as Timestamp)
-                                                            .toDate()),
+                                            "Requested at ${DateFormat('MMMM d, y hh:mm a').format((userInfo['requestedAt'] as Timestamp).toDate())}",
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey),
@@ -664,15 +736,32 @@ class FlockDetailsScreenState extends State<FlockDetailsScreen> {
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                              Text(
-                                                "By " +
-                                                    (squawk['username'] ??
-                                                        'Unknown User'),
-                                                style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                    color:
-                                                        AppColors.mediumGrey),
+                                              TextButton(
+                                                style: TextButton.styleFrom(
+                                                    padding: EdgeInsets.zero,
+                                                    minimumSize: Size(0, 0),
+                                                    tapTargetSize:
+                                                        MaterialTapTargetSize
+                                                            .shrinkWrap),
+                                                onLongPress: squawk['userId'] !=
+                                                        _currentUser?.uid
+                                                    ? () => _showReportDialog(
+                                                        context,
+                                                        squawk['userId'],
+                                                        squawk['username'] ??
+                                                            'Unknown User',
+                                                        squawk: squawk)
+                                                    : null,
+                                                onPressed: null,
+                                                child: Text(
+                                                  "By ${(squawk['username'] ?? 'Unknown User')}",
+                                                  style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color:
+                                                          AppColors.mediumGrey),
+                                                ),
                                               ),
                                               if (squawk['mediaUrls'] != null)
                                                 _buildMediaPreview(

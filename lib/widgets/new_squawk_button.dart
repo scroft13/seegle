@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:seegle/store/store.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 
 class NewSquawkButton extends StatefulWidget {
   const NewSquawkButton({super.key});
@@ -98,7 +99,36 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: uploading ? null : _addSquawk,
+                onPressed: uploading
+                    ? null
+                    : () async {
+                        setState(() {
+                          uploading = true;
+                        });
+                        await _addSquawk();
+                        final aiReply = await _generateSquawk();
+                        if (aiReply != null && aiReply.trim().isNotEmpty) {
+                          final String flockId =
+                              Provider.of<AppStore>(context, listen: false)
+                                  .flockId;
+                          await FirebaseFirestore.instance
+                              .collection('squawks')
+                              .add({
+                            "title": "AI Reply",
+                            "userId": "ai-bot",
+                            "username": "Seegle AI",
+                            "createdAt": DateTime.now(),
+                            "message": aiReply.trim(),
+                            "mediaType": "text",
+                            "comments": [],
+                            "mediaUrls": [],
+                            "flockId": flockId,
+                          });
+                        }
+                        setState(() {
+                          uploading = false;
+                        });
+                      },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 45),
                 ),
@@ -256,6 +286,21 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
           },
         ) ??
         false;
+  }
+
+  Future<String?> _generateSquawk() async {
+    final String title = _titleController.text.trim();
+    final String squawkText = _squawkController.text.trim();
+    final model =
+        FirebaseAI.googleAI().generativeModel(model: 'gemini-2.0-flash');
+
+// Provide a prompt that contains text
+    final prompt = [Content.text("$title $squawkText")];
+
+// To generate text output, call generateContent with the text input
+    final response = await model.generateContent(prompt);
+    print(response.text);
+    return response.text;
   }
 
   Future<void> _addSquawk() async {

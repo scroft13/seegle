@@ -12,6 +12,8 @@ import 'package:seegle/store/store.dart';
 import 'package:seegle/theme.dart';
 import 'user_provider.dart';
 import 'screens/auth_screen.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -23,8 +25,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug, // Use PlayIntegrity for production
+    appleProvider:
+        AppleProvider.debug, // Use DeviceCheck or AppAttest for production
   );
   await _setupFirebaseMessaging();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

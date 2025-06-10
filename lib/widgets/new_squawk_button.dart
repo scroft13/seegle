@@ -129,7 +129,11 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
     if (source == ImageSource.camera) {
       status = await Permission.camera.request();
     } else {
+      // For gallery access, try photos permission first, fallback to storage for older Android
       status = await Permission.photos.request();
+      if (status.isDenied) {
+        status = await Permission.storage.request();
+      }
     }
 
     if (status.isGranted) {

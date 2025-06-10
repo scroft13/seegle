@@ -22,7 +22,8 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
   final TextEditingController _linkController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String? _mediaUrl;
+  List<String> _mediaUrls = [];
+  String? _mediaType;
   bool uploading = false;
 
   void _openBottomSheet() {
@@ -59,7 +60,7 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
               TextField(
                 controller: _squawkController,
                 decoration: const InputDecoration(
-                  labelText: "Message (Required)",
+                  labelText: "Message (Optional)",
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -73,24 +74,37 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
                 ),
               ),
               const SizedBox(height: 10),
-              ElevatedButton.icon(
-                onPressed: uploading ? null : _pickAndStoreMedia,
-                icon: uploading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : (_mediaUrl != null
-                        ? const Icon(Icons.check, color: Colors.green)
-                        : const Icon(Icons.camera_alt)),
-                label: Text(uploading
-                    ? "Uploading..."
-                    : (_mediaUrl != null ? "Uploaded" : "Add Photo or Video")),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: uploading
+                          ? null
+                          : () => _pickAndStoreMedia(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Camera"),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: uploading
+                          ? null
+                          : () => _pickAndStoreMedia(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text("Gallery"),
+                    ),
+                  ),
+                ],
               ),
+              if (_mediaUrls.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    "${_mediaUrls.length} file(s) uploaded",
+                    style: const TextStyle(color: Colors.green),
+                  ),
+                ),
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _addSquawk,
@@ -107,9 +121,16 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
     );
   }
 
-  Future<void> _pickAndStoreMedia() async {
+  Future<void> _pickAndStoreMedia(ImageSource source) async {
     final User? user = _auth.currentUser;
-    final status = await Permission.camera.request();
+
+    // Request permission
+    PermissionStatus status;
+    if (source == ImageSource.camera) {
+      status = await Permission.camera.request();
+    } else {
+      status = await Permission.photos.request();
+    }
 
     if (status.isGranted) {
       final ImagePicker picker = ImagePicker();
@@ -118,16 +139,15 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text("Select Media Type"),
-            content:
-                const Text("Would you like to take a photo or record a video?"),
+            content: const Text("Would you like to select a photo or video?"),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, "photo"),
-                child: const Text("Take Photo"),
+                child: const Text("Photo"),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, "video"),
-                child: const Text("Record Video"),
+                child: const Text("Video"),
               ),
             ],
           );
@@ -141,9 +161,11 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
 
       XFile? mediaFile;
       if (choice == "photo") {
-        mediaFile = await picker.pickImage(source: ImageSource.camera);
+        mediaFile = await picker.pickImage(source: source);
+        _mediaType = 'image';
       } else if (choice == "video") {
-        mediaFile = await picker.pickVideo(source: ImageSource.camera);
+        mediaFile = await picker.pickVideo(source: source);
+        _mediaType = 'video';
       }
 
       if (mediaFile != null) {
@@ -158,22 +180,16 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
             uploading = true;
           });
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {});
-          });
           UploadTask uploadTask = storageRef.putFile(file);
           TaskSnapshot snapshot = await uploadTask;
           String downloadUrl = await snapshot.ref.getDownloadURL();
 
           setState(() {
-            _mediaUrl = downloadUrl;
+            _mediaUrls.add(downloadUrl);
             uploading = false;
           });
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {});
-          });
-          debugPrint("Media uploaded: $_mediaUrl");
+          debugPrint("Media uploaded: $downloadUrl");
         } catch (e) {
           debugPrint("Upload failed: $e");
           setState(() {
@@ -181,10 +197,10 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
           });
         }
       } else {
-        debugPrint("No media captured");
+        debugPrint("No media selected");
       }
     } else {
-      debugPrint("Camera permission denied");
+      debugPrint("Permission denied");
     }
   }
 
@@ -199,10 +215,7 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
       return;
     }
 
-    if (squawkText.isEmpty) {
-      debugPrint("Squawk message is required");
-      return;
-    }
+    // Message is now optional - can post with just title and/or media
 
     if (firebaseUser == null) {
       debugPrint("User is not authenticated");
@@ -233,18 +246,21 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
         "userId": firebaseUser.uid,
         "username": username,
         "createdAt": Timestamp.fromDate(now),
-        "message": squawkText,
         "flockId": flockId,
       };
+
+      // Only add message if it's not empty
+      if (squawkText.isNotEmpty) {
+        squawkData["message"] = squawkText;
+      }
 
       if (link.isNotEmpty) {
         squawkData["link"] = link;
       }
 
-      if (_mediaUrl != null && _mediaUrl!.isNotEmpty) {
-        squawkData["mediaUrls"] = [_mediaUrl];
-        squawkData["mediaType"] =
-            _mediaUrl!.contains('video') ? 'video' : 'image';
+      if (_mediaUrls.isNotEmpty) {
+        squawkData["mediaUrls"] = _mediaUrls;
+        squawkData["mediaType"] = _mediaType;
       }
 
       // Create the squawk as an individual document in the squawks collection
@@ -257,7 +273,8 @@ class NewSquawkButtonState extends State<NewSquawkButton> {
       _titleController.clear();
       _squawkController.clear();
       _linkController.clear();
-      _mediaUrl = null;
+      _mediaUrls.clear();
+      _mediaType = null;
     } catch (e) {
       debugPrint("Firestore write error: $e");
     }
